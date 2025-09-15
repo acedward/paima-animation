@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paima Engine - Blockchain Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #022418;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .controls {
+            background: rgba(26, 26, 26, 0.9);
+            border: 2px solid #19b17b;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 1160px;
+            max-width: 90%;
+            color: white;
+        }
+        
+        .controls h2 {
+            margin-top: 0;
+            color: #19b17b;
+            font-size: 1.5rem;
+        }
+        
+        .main-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .preset-chains {
+            flex: 1;
+        }
+        
+        .preset-chains h3 {
+            color: #19b17b;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .preset-btn {
+            background: #444;
+            border: 1px solid #666;
+            border-radius: 5px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .preset-btn:hover {
+            background: #555;
+            border-color: #19b17b;
+        }
+        
+        .preset-btn:disabled {
+            background: #333;
+            border-color: #555;
+            color: #777;
+            cursor: not-allowed;
+        }
+        
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 150px;
+        }
+        
+        .pause-btn {
+            background: #e74c3c;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .pause-btn:hover {
+            background: #c0392b;
+        }
+        
+        .pause-btn.paused {
+            background: #27ae60;
+        }
+        
+        .pause-btn.paused:hover {
+            background: #229954;
+        }
+        
+        .clear-btn {
+            background: #f39c12;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .clear-btn:hover {
+            background: #e67e22;
+        }
+        
+        .custom-chain-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+        
+        .custom-chain-toggle {
+            background: none;
+            border: none;
+            color: #19b17b;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        
+        .custom-chain-toggle:hover {
+            color: #16a168;
+        }
+        
+        .add-chain-form {
+            display: none;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .add-chain-form.visible {
+            display: flex;
+        }
+        
+        .add-chain-form input {
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .add-chain-form input:focus {
+            outline: none;
+            border-color: #19b17b;
+        }
+        
+        .add-chain-form button {
+            background: #19b17b;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .add-chain-form button:hover {
+            background: #16a168;
+        }
+        
+        .add-chain-form button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
+        .chain-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 10px;
+        }
+        
+        .chain-item {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chain-item.paima {
+            border-color: #19b17b;
+            background: rgba(25, 177, 123, 0.1);
+        }
+        
+        .chain-info {
+            flex: 1;
+        }
+        
+        .chain-name {
+            font-weight: bold;
+            color: #19b17b;
+        }
+        
+        .chain-timing {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .remove-btn {
+            background: #e74c3c;
+            border: none;
+            border-radius: 3px;
+            padding: 4px 8px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .remove-btn:hover {
+            background: #c0392b;
+        }
+        
+        canvas {
+            border: 2px solid #19b17b;
+            border-radius: 10px;
+            background: #011a12;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .info {
+            color: white;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+            border: 1px solid #19b17b;
+            line-height: 1.4;
+        }
+        
+        .tooltip-title {
+            font-weight: bold;
+            color: #19b17b;
+            margin-bottom: 5px;
+        }
+        
+        .tooltip-content {
+            color: #ccc;
+        }
+        
+        .tooltip-data {
+            margin-top: 5px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Paima Engine: A Visual Guide</h1>
+    
+    <div class="controls" style="display: none;">
+        <h2>Blockchain Configuration</h2>
+        
+        <div class="main-controls">
+            <div class="preset-chains">
+                <h3>Add Popular Blockchain Chains</h3>
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-name="XAI" data-time="0.2" data-type="probability">XAI (0.1s-0.3s)</button>
+                    <button class="preset-btn" data-name="Ethereum" data-time="12">Ethereum (12s)</button>
+                    <button class="preset-btn" data-name="Arbitrum" data-time="0.25">Arbitrum (0.25s)</button>
+                    <button class="preset-btn" data-name="Solana" data-time="0.4">Solana (0.4s)</button>
+                    <button class="preset-btn" data-name="Cardano" data-time="20">Cardano (20s)</button>
+                    <button class="preset-btn" data-name="Midnight" data-time="6">Midnight (6s)</button>
+                    <button class="preset-btn" data-name="Polygon" data-time="2">Polygon (2s)</button>
+                    <button class="preset-btn" data-name="Binance Smart Chain" data-time="0.75">BSC (0.75s)</button>
+                    <button class="preset-btn" data-name="Avalanche" data-time="2">Avalanche (2s)</button>
+                    <button class="preset-btn" data-name="Bitcoin" data-time="600">Bitcoin (10m)</button>
+                    <button class="preset-btn" data-name="Litecoin" data-time="150">Litecoin (2.5m)</button>
+                </div>
+            </div>
+            
+            <div class="control-buttons">
+                <button class="pause-btn" id="pauseBtn">⏸️ PAUSE</button>
+                <button class="clear-btn" id="clearBtn">🗑️ Clear All</button>
+            </div>
+        </div>
+        
+        <div class="chain-list" id="chainList">
+            <!-- Chain items will be populated here -->
+        </div>
+        
+        <div class="custom-chain-section">
+            <button class="custom-chain-toggle" id="customChainToggle">+ Add Custom Chain</button>
+            
+            <div class="add-chain-form" id="addChainForm">
+                <div class="form-group">
+                    <label for="chainName">Chain Name</label>
+                    <input type="text" id="chainName" placeholder="Enter chain name" maxlength="20">
+                </div>
+                
+                <div class="form-group">
+                    <label for="blockTime">Block Time (seconds)</label>
+                    <input type="number" id="blockTime" placeholder="Block time" min="0.1" max="600" step="0.1">
+                </div>
+                
+                <button id="addChainBtn">Add Chain</button>
+            </div>
+            
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <canvas id="animationCanvas" width="1200" height="1000"></canvas>
+    
+    <!-- Tooltip element -->
+    <div id="tooltip" class="tooltip" style="display: none;"></div>
+    
+  
+
+    <!-- Import the blockchain engine -->
+    <script src="blockchain-engine.js"></script>
+    
+    <script>
+        // Enhanced UI Controller with dynamic chain management and tooltips
+        class CanvasRenderer {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.animationId = null;
+                this.isPaused = false;
+                this.lastUpdateTime = 0;
+                
+                // Initialize the blockchain engine with only Paima Engine
+                this.engine = new window.BlockchainEngine.BlockchainEngine(this.canvas.width);
+                
+                // Start with only Paima Engine
+                this.engine.blockchains = [
+                    {
+                        name: 'Paima Engine',
+                        color: () => '#19b17b',
+                        yPosition: this.chainStartY,
+                        timing: { type: 'fixed', interval: 1000 },
+                        counter: 0,
+                        blocks: [],
+                        lastBlockTime: 0,
+                        lastBlockEndTime: 0,
+                        id: 'paima-engine' // Add ID for management
+                    }
+                ];
+                
+                // Initialize UI handlers
+                this.initializeUI();
+                this.initializeTooltips();
+                this.updateChainList();
+                this.updatePresetButtons();
+                
+                // Schedule automatic chain additions
+                this.scheduleChainAdditions();
+            }
+            
+            scheduleChainAdditions() {
+                // After 4 seconds, add Arbitrum
+                setTimeout(() => {
+                    this.addChainProgrammatically('Arbitrum', 0.25);
+                    console.log('Added Arbitrum blockchain');
+                }, 3500);
+                
+                // After 8 seconds, add Ethereum
+                setTimeout(() => {
+                    this.addChainProgrammatically('Ethereum', 12);
+                    console.log('Added Ethereum blockchain');
+                }, 7600);
+                
+                // After 12 seconds, add Cardano, Midnight, and Solana
+                setTimeout(() => {
+                    this.addChainProgrammatically('Cardano', 20);
+                    this.addChainProgrammatically('Midnight', 6);
+                    this.addChainProgrammatically('Solana', 0.4);
+                    console.log('Added Cardano, Midnight, and Solana blockchains');
+                }, 11400);
+            }
+            
+            chainSpacing = 80;
+            chainStartY = 400;
+            addChainProgrammatically(name, blockTimeSeconds) {
+                // Don't add if chain already exists
+                const existingChain = this.engine.blockchains.find(chain => 
+                    chain.name.toLowerCase() === name.toLowerCase()
+                );
+                if (existingChain) {
+                    return;
+                }
+                
+                // const chainSpacing = this.chainSpacing;
+                // const chainStartY = this.chainStartY;
+                const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
+                
+                const newChain = {
+                    name: name,
+                    color: () => '#7f8c8d',
+                    yPosition: newYPosition,
+                    timing: { type: 'fixed', interval: blockTimeSeconds * 1000 }, // Convert to milliseconds
+                    counter: 0,
+                    blocks: [],
+                    lastBlockTime: 0,
+                    lastBlockEndTime: this.engine.getCurrentTime(), // Start at current engine time to avoid huge first block
+                    id: `chain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID
+                };
+                
+                this.engine.blockchains.push(newChain);
+                this.updateChainList();
+                this.updatePresetButtons();
+            }
+            
+            initializeUI() {
+                const addChainBtn = document.getElementById('addChainBtn');
+                const chainNameInput = document.getElementById('chainName');
+                const blockTimeInput = document.getElementById('blockTime');
+                const customChainToggle = document.getElementById('customChainToggle');
+                const addChainForm = document.getElementById('addChainForm');
+                const pauseBtn = document.getElementById('pauseBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                
+                // Custom chain toggle
+                customChainToggle.addEventListener('click', () => {
+                    addChainForm.classList.toggle('visible');
+                    customChainToggle.textContent = addChainForm.classList.contains('visible') 
+                        ? '- Hide Custom Chain' 
+                        : '+ Add Custom Chain';
+                });
+                
+                // Pause/Resume button
+                pauseBtn.addEventListener('click', () => {
+                    this.togglePause();
+                });
+                
+                // Clear all button
+                clearBtn.addEventListener('click', () => {
+                    this.clearAllChains();
+                });
+                
+                // Add chain button handler
+                addChainBtn.addEventListener('click', () => {
+                    const name = chainNameInput.value.trim();
+                    const blockTime = parseFloat(blockTimeInput.value);
+                    
+                    if (this.validateChainInput(name, blockTime)) {
+                        this.addChain(name, blockTime);
+                        chainNameInput.value = '';
+                        blockTimeInput.value = '';
+                        this.hideError();
+                        addChainForm.classList.remove('visible');
+                        customChainToggle.textContent = '+ Add Custom Chain';
+                    }
+                });
+                
+                // Enter key handler for inputs
+                [chainNameInput, blockTimeInput].forEach(input => {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            addChainBtn.click();
+                        }
+                    });
+                });
+                
+                // Preset buttons handler
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        if (e.target.disabled) return;
+                        
+                        const name = e.target.getAttribute('data-name');
+                        const time = parseFloat(e.target.getAttribute('data-time'));
+                        const type = e.target.getAttribute('data-type');
+                        
+                        if (this.validateChainInput(name, time)) {
+                            if (type === 'probability' && name === 'XAI') {
+                                this.addXAIChain();
+                            } else {
+                                this.addChain(name, time);
+                            }
+                            this.hideError();
+                        }
+                    });
+                });
+            }
+            
+            initializeTooltips() {
+                const tooltip = document.getElementById('tooltip');
+                let currentTooltipTarget = null;
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const tooltipData = this.getTooltipData(x, y);
+                    
+                    if (tooltipData) {
+                        tooltip.style.display = 'block';
+                        tooltip.innerHTML = `
+                            <div class="tooltip-title">${tooltipData.title}</div>
+                            <div class="tooltip-content">${tooltipData.content}</div>
+                            ${tooltipData.data ? `<div class="tooltip-data">${tooltipData.data}</div>` : ''}
+                        `;
+                        
+                        // Position tooltip
+                        tooltip.style.left = (e.clientX + 10) + 'px';
+                        tooltip.style.top = (e.clientY - 10) + 'px';
+                        
+                        // Adjust position if tooltip goes off screen
+                        const tooltipRect = tooltip.getBoundingClientRect();
+                        if (tooltipRect.right > window.innerWidth) {
+                            tooltip.style.left = (e.clientX - tooltipRect.width - 10) + 'px';
+                        }
+                        if (tooltipRect.bottom > window.innerHeight) {
+                            tooltip.style.top = (e.clientY - tooltipRect.height - 10) + 'px';
+                        }
+                    } else {
+                        tooltip.style.display = 'none';
+                    }
+                });
+                
+                this.canvas.addEventListener('mouseleave', () => {
+                    tooltip.style.display = 'none';
+                });
+            }
+            
+            getTooltipData(x, y) {
+                // Check blocks
+                for (let blockchain of this.engine.blockchains) {
+                    for (let block of blockchain.blocks) {
+                        if (x >= block.x && x <= block.x + block.width && 
+                            y >= block.y && y <= block.y + block.height) {
+                            
+                            const startTime = new Date(this.engine.engineStartTime + block.startTime);
+                            const endTime = new Date(this.engine.engineStartTime + block.endTime);
+                            
+                            return {
+                                title: `${blockchain.name} Block #${block.index}`,
+                                content: `Duration: ${(block.duration / 1000).toFixed(1)}s<br>
+                                         Events: ${block.events.length}`,
+                                data: `Start: ${startTime.toLocaleTimeString()}<br>
+                                       End: ${endTime.toLocaleTimeString()}<br>
+                                       ${block.events.length > 0 ? `Events: ${block.events.map(e => e.type).join(', ')}` : ''}`
+                            };
+                        }
+                    }
+                }
+                
+                // Check actions
+                for (let action of this.engine.actions) {
+                    if (x >= action.x && x <= action.x + action.width && 
+                        y >= action.y && y <= action.y + action.height) {
+                        
+                        const scheduledTime = new Date(this.engine.engineStartTime + action.scheduledTime);
+                        let status = 'Scheduled';
+                        if (action.isExecuted) status = 'Executed';
+                        if (action.isWaitingAtNow) status = 'Waiting at NOW';
+                        if (action.isTravelingToTable) status = 'Traveling to table';
+                        
+                        return {
+                            title: `Action #${action.index}`,
+                            content: `Status: ${status}<br>
+                                     Events: ${action.events.length}<br>
+                                     ${action.targetTable ? `Target: ${action.targetTable.name}` : ''}`,
+                            data: `Scheduled: ${scheduledTime.toLocaleTimeString()}<br>
+                                   Shape: ${action.currentShape} → ${action.targetShape}<br>
+                                   ${action.events.length > 0 ? `Event types: ${action.events.map(e => e.type).join(', ')}` : ''}`
+                        };
+                    }
+                }
+                
+                // Check tables
+                for (let table of Object.values(this.engine.tables)) {
+                    if (x >= table.x && x <= table.x + table.width && 
+                        y >= table.y && y <= table.y + table.height) {
+                        
+                        const lastUpdate = table.lastModified ? new Date(table.lastModified) : null;
+                        
+                        return {
+                            title: `SQL Table: ${table.name}`,
+                            content: `Rows: ${table.data.length}<br>
+                                     Columns: ${table.columns.join(', ')}<br>
+                                     ${table.isBlinking ? '<span style="color: #19b17b;">UPDATING</span>' : 'Idle'}`,
+                            data: `Last update: ${lastUpdate ? lastUpdate.toLocaleTimeString() : 'Never'}<br>
+                                   Latest data: ${table.data.length > 0 ? table.data[0].row.join(' | ') : 'None'}`
+                        };
+                    }
+                }
+                
+                return null;
+            }
+            
+            togglePause() {
+                this.isPaused = !this.isPaused;
+                const pauseBtn = document.getElementById('pauseBtn');
+                
+                if (this.isPaused) {
+                    pauseBtn.textContent = '▶️ RESUME';
+                    pauseBtn.classList.add('paused');
+                    this.engine.pauseTime = Date.now();
+                } else {
+                    pauseBtn.textContent = '⏸️ PAUSE';
+                    pauseBtn.classList.remove('paused');
+                    // Adjust engine start time to account for pause duration
+                    if (this.engine.pauseTime) {
+                        const pauseDuration = Date.now() - this.engine.pauseTime;
+                        this.engine.engineStartTime += pauseDuration;
+                        
+                        // Adjust all blockchain timings
+                        this.engine.blockchains.forEach(blockchain => {
+                            blockchain.lastBlockTime += pauseDuration;
+                        });
+                        
+                        // Adjust all action timings
+                        this.engine.actions.forEach(action => {
+                            if (action.travelStartTime) action.travelStartTime += pauseDuration;
+                            if (action.waitStartTime) action.waitStartTime += pauseDuration;
+                            if (action.fadeStartTime) action.fadeStartTime += pauseDuration;
+                        });
+                    }
+                }
+            }
+            
+            clearAllChains() {
+                // Keep only Paima Engine
+                this.engine.blockchains = this.engine.blockchains.filter(chain => 
+                    chain.id === 'paima-engine'
+                );
+                
+                // Reset position
+                this.engine.blockchains[0].yPosition = this.chainStartY;
+                
+                this.updateChainList();
+                this.updatePresetButtons();
+            }
+            
+            validateChainInput(name, blockTime) {
+                const errorMessage = document.getElementById('errorMessage');
+                
+                if (!name) {
+                    this.showError('Chain name is required');
+                    return false;
+                }
+                
+                if (isNaN(blockTime) || blockTime <= 0) {
+                    this.showError('Block time must be a positive number');
+                    return false;
+                }
+                
+                if (blockTime > 600) {
+                    this.showError('Block time cannot exceed 600 seconds (10 minutes)');
+                    return false;
+                }
+                
+                // Check if chain already exists
+                const existingChain = this.engine.blockchains.find(chain => 
+                    chain.name.toLowerCase() === name.toLowerCase()
+                );
+                
+                if (existingChain) {
+                    this.showError('A chain with this name already exists');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            showError(message) {
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+            
+            hideError() {
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.style.display = 'none';
+            }
+            
+            addChain(name, blockTimeSeconds) {
+                // const chainSpacing = 120;
+                // const chainStartY = 310;
+                const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
+                
+                const newChain = {
+                    name: name,
+                    color: () => '#7f8c8d',
+                    yPosition: newYPosition,
+                    timing: { type: 'fixed', interval: blockTimeSeconds * 1000 }, // Convert to milliseconds
+                    counter: 0,
+                    blocks: [],
+                    lastBlockTime: 0,
+                    lastBlockEndTime: this.engine.getCurrentTime(), // Start at current engine time to avoid huge first block
+                    id: `chain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID
+                };
+                
+                this.engine.blockchains.push(newChain);
+                this.updateChainList();
+                this.updatePresetButtons();
+            }
+            
+            addXAIChain() {
+                // const chainSpacing = 120;
+                // const chainStartY = 310;
+                const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
+                
+                const newChain = {
+                    name: 'XAI',
+                    color: () => '#7f8c8d',
+                    yPosition: newYPosition,
+                    timing: { 
+                        type: 'probability', 
+                        possibleIntervals: [100, 150, 200, 250, 300], // milliseconds
+                        currentCheckIndex: 0
+                    },
+                    counter: 0,
+                    blocks: [],
+                    lastBlockTime: 0,
+                    lastBlockEndTime: this.engine.getCurrentTime(), // Start at current engine time to avoid huge first block
+                    id: `xai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID
+                };
+                
+                this.engine.blockchains.push(newChain);
+                this.updateChainList();
+                this.updatePresetButtons();
+            }
+            
+            removeChain(chainId) {
+                if (chainId === 'paima-engine') {
+                    return; // Can't remove Paima Engine
+                }
+                
+                // Remove from engine
+                this.engine.blockchains = this.engine.blockchains.filter(chain => chain.id !== chainId);
+                
+                // Recalculate Y positions for remaining chains
+                // const chainSpacing = 120;
+                // const chainStartY = 310;
+                
+                this.engine.blockchains.forEach((chain, index) => {
+                    chain.yPosition = this.chainStartY + (index * this.chainSpacing);
+                });
+                
+                this.updateChainList();
+                this.updatePresetButtons();
+            }
+            
+            updatePresetButtons() {
+                const activeChainNames = this.engine.blockchains.map(chain => chain.name.toLowerCase());
+                
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    const chainName = btn.getAttribute('data-name').toLowerCase();
+                    const isActive = activeChainNames.includes(chainName);
+                    
+                    btn.disabled = isActive;
+                    btn.textContent = isActive ? 
+                        btn.getAttribute('data-name') + ' (Active)' : 
+                        btn.getAttribute('data-name') + ' (' + btn.getAttribute('data-time') + 's)';
+                });
+            }
+            
+            updateChainList() {
+                const chainList = document.getElementById('chainList');
+                chainList.innerHTML = '';
+                
+                this.engine.blockchains.forEach(chain => {
+                    const chainItem = document.createElement('div');
+                    chainItem.className = `chain-item ${chain.id === 'paima-engine' ? 'paima' : ''}`;
+                    
+                    let timeDisplay;
+                    if (chain.timing.type === 'probability') {
+                        // For probabilistic chains, show range
+                        const minTime = Math.min(...chain.timing.possibleIntervals) / 1000;
+                        const maxTime = Math.max(...chain.timing.possibleIntervals) / 1000;
+                        timeDisplay = `${minTime.toFixed(1)}s-${maxTime.toFixed(1)}s`;
+                    } else {
+                        // For fixed timing chains
+                        const blockTimeSeconds = chain.timing.interval / 1000;
+                        timeDisplay = blockTimeSeconds >= 60 ? 
+                            `${(blockTimeSeconds / 60).toFixed(1)}m` : 
+                            `${blockTimeSeconds}s`;
+                    }
+                    
+                    chainItem.innerHTML = `
+                        <div class="chain-info">
+                            <div class="chain-name">${chain.name}</div>
+                            <div class="chain-timing">Block time: ${timeDisplay} | Blocks: ${chain.blocks.length}</div>
+                        </div>
+                        ${chain.id !== 'paima-engine' ? 
+                            `<button class="remove-btn" onclick="renderer.removeChain('${chain.id}')">Remove</button>` : 
+                            '<div style="color: #19b17b; font-size: 12px; font-weight: bold;">ALWAYS ON</div>'
+                        }
+                    `;
+                    
+                    chainList.appendChild(chainItem);
+                });
+            }
+            
+            // All the existing drawing methods remain the same...
+            drawTable(table) {
+                const config = window.BlockchainEngine.tableConfig;
+                
+                // Draw table background with subtle blinking effect
+                if (table.isBlinking) {
+                    // Subtle oscillating opacity for blink effect
+                    const blinkProgress = (Date.now() - table.blinkStartTime) / config.blinkDuration;
+                    const blinkOpacity = 0.15 + 0.1 * Math.abs(Math.sin(blinkProgress * Math.PI * 3)); // Reduced intensity and frequency
+                    this.ctx.fillStyle = `rgba(25, 177, 123, ${blinkOpacity})`;
+                } else {
+                    this.ctx.fillStyle = '#1a1a1a';
+                }
+                this.ctx.fillRect(table.x, table.y, config.width, config.height);
+                
+                // Draw table border (slightly brighter when blinking)
+                if (table.isBlinking) {
+                    this.ctx.strokeStyle = '#1fb57d'; // Subtle green instead of bright
+                    this.ctx.lineWidth = 2.5;
+                } else {
+                    this.ctx.strokeStyle = '#19b17b';
+                    this.ctx.lineWidth = 2;
+                }
+                this.ctx.strokeRect(table.x, table.y, config.width, config.height);
+                
+                // Draw table header
+                this.ctx.fillStyle = '#19b17b';
+                this.ctx.fillRect(table.x, table.y, config.width, config.headerHeight);
+                
+                // Draw table title
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = 'bold 12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(table.name, table.x + config.width / 2, table.y + config.headerHeight / 2 + 4);
+                
+                // Draw column headers
+                const columnWidth = config.width / table.columns.length;
+                this.ctx.fillStyle = '#ccc';
+                this.ctx.font = '10px Arial';
+                
+                table.columns.forEach((column, index) => {
+                    const columnX = table.x + index * columnWidth;
+                    const columnCenterX = columnX + columnWidth / 2;
+                    this.ctx.fillText(column, columnCenterX, table.y + config.headerHeight + 15);
+                });
+                
+                // Draw separator line after headers
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(table.x, table.y + config.headerHeight + 20);
+                this.ctx.lineTo(table.x + config.width, table.y + config.headerHeight + 20);
+                this.ctx.stroke();
+                
+                // Draw table data (already sorted by timestamp in engine)
+                table.data.forEach((rowData, rowIndex) => {
+                    const row = rowData.row;
+                    const rowY = table.y + config.headerHeight + 35 + (rowIndex * config.rowHeight);
+                    
+                    // Alternate row background - inset by 1px to stay inside border
+                    if (rowIndex % 2 === 1) {
+                        this.ctx.fillStyle = '#2a2a2a';
+                        this.ctx.fillRect(table.x + 1, rowY - 10, config.width - 2, config.rowHeight);
+                    }
+                    
+                    // Highlight newest row (index 0) with subtle glow - inset by 1px to stay inside border
+                    if (rowIndex === 0) {
+                        this.ctx.fillStyle = 'rgba(25, 177, 123, 0.08)'; // More subtle
+                        this.ctx.fillRect(table.x + 1, rowY - 10, config.width - 2, config.rowHeight);
+                    }
+                    
+                    // Draw row data
+                    this.ctx.fillStyle = rowIndex === 0 ? '#1fb57d' : '#fff'; // Subtle green for newest
+                    this.ctx.font = '9px Arial';
+                    row.forEach((cell, cellIndex) => {
+                        const cellX = table.x + cellIndex * columnWidth;
+                        const cellCenterX = cellX + columnWidth / 2;
+                        this.ctx.fillText(cell, cellCenterX, rowY);
+                    });
+                });
+                
+                // Draw column separator lines
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 1;
+                for (let i = 1; i < table.columns.length; i++) {
+                    const lineX = table.x + i * columnWidth;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(lineX, table.y + config.headerHeight);
+                    this.ctx.lineTo(lineX, table.y + config.height);
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawEventIndicators(block) {
+                if (block.events.length === 0) return;
+                
+                // Only draw if block is wide enough
+                if (block.width < 30) return;
+                
+                // Draw event indicators at the same positions where particles will land
+                const dotSize = 3;
+                
+                // Event type colors
+                const eventColors = {
+                    'erc20_transfer': '#f39c12',
+                    'erc721_transfer': '#9b59b6',
+                    'game_move': '#3498db',
+                    'account_created': '#2ecc71'
+                };
+                
+                block.events.forEach((event, index) => {
+                    // Same positioning as particles: x=10, x=20, x=30, etc.
+                    const eventX = 10 + (index * 10);
+                    const eventY = 15; // 15px from top of block
+                    
+                    // Don't draw if it would go outside the block
+                    if (eventX + 5 > block.width) return; // Leave margin at right edge
+                    
+                    // Draw event indicator dot
+                    this.ctx.fillStyle = eventColors[event.type] || '#fff';
+                    this.ctx.beginPath();
+                    this.ctx.arc(eventX, eventY, dotSize / 2, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                    
+                    // Draw small border around dot
+                    this.ctx.strokeStyle = '#000';
+                    this.ctx.lineWidth = 0.5;
+                    this.ctx.stroke();
+                });
+            }
+            
+            drawChainLabel(y, label, height, color = '#fff', x = 20) {
+                this.ctx.fillStyle = color;
+                this.ctx.font = 'bold 16px Arial';
+                this.ctx.textAlign = 'left';
+                // Position label above the blocks
+                this.ctx.fillText(label, x, y - 10);
+            }
+            
+            drawAction(action) {
+                this.ctx.save();
+                this.ctx.globalAlpha = action.opacity;
+                
+                if (action.isTravelingToTable || action.isFadingOut) {
+                    // Draw clean traveling/fading action - slightly bigger than normal
+                    const size = 12; // Slightly bigger than normal (20px width -> 12px radius)
+                    const centerX = action.x + action.width / 2;
+                    const centerY = action.y + action.height / 2;
+                    
+                    this.ctx.fillStyle = action.color;
+                    this.ctx.strokeStyle = '#ccc';
+                    this.ctx.lineWidth = 1;
+                    
+                    // Smooth shape transition based on progress
+                    if (action.shapeTransitionProgress < 0.3) {
+                        // Early travel: show current shape only
+                        this.renderActionShape(action.currentShape, centerX, centerY, size);
+                    } else if (action.shapeTransitionProgress > 0.7) {
+                        // Late travel: show target shape only
+                        this.renderActionShape(action.targetShape, centerX, centerY, size);
+                    } else {
+                        // Middle travel: blend both shapes
+                        const blendProgress = (action.shapeTransitionProgress - 0.3) / 0.4; // 0 to 1 over the 0.3-0.7 range
+                        
+                        // Draw current shape with decreasing opacity
+                        this.ctx.globalAlpha = action.opacity * (1 - blendProgress);
+                        this.renderActionShape(action.currentShape, centerX, centerY, size);
+                        
+                        // Draw target shape with increasing opacity
+                        this.ctx.globalAlpha = action.opacity * blendProgress;
+                        this.renderActionShape(action.targetShape, centerX, centerY, size);
+                        
+                        // Reset alpha
+                        this.ctx.globalAlpha = action.opacity;
+                    }
+                } else if (action.isWaitingAtNow) {
+                    // Draw action waiting at NOW line - same as normal but at NOW position
+                    // Draw action shadow
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    this.ctx.fillRect(action.x + 1, action.y + 1, action.width, action.height);
+                    
+                    // Draw main action square
+                    this.ctx.fillStyle = action.color;
+                    this.ctx.fillRect(action.x, action.y, action.width, action.height);
+                    
+                    // Draw action border
+                    this.ctx.strokeStyle = '#ccc';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.strokeRect(action.x, action.y, action.width, action.height);
+                    
+                    // Draw action number
+                    this.ctx.fillStyle = '#000';
+                    this.ctx.font = 'bold 10px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(action.index.toString(), action.x + action.width/2, action.y + action.height/2 + 3);
+                } else {
+                    // Draw normal scheduled action
+                    // Draw action shadow
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    this.ctx.fillRect(action.x + 1, action.y + 1, action.width, action.height);
+                    
+                    // Draw main action square
+                    this.ctx.fillStyle = action.color;
+                    this.ctx.fillRect(action.x, action.y, action.width, action.height);
+                    
+                    // Draw action border
+                    this.ctx.strokeStyle = '#ccc';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.strokeRect(action.x, action.y, action.width, action.height);
+                    
+                    // Draw action number
+                    this.ctx.fillStyle = '#000';
+                    this.ctx.font = 'bold 10px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(action.index.toString(), action.x + action.width/2, action.y + action.height/2 + 3);
+                }
+                
+                this.ctx.restore();
+            }
+            
+            renderActionShape(shape, x, y, size) {
+                this.ctx.beginPath();
+                
+                switch (shape) {
+                    case 'triangle':
+                        this.ctx.moveTo(x, y - size);
+                        this.ctx.lineTo(x - size, y + size);
+                        this.ctx.lineTo(x + size, y + size);
+                        this.ctx.closePath();
+                        break;
+                    case 'square':
+                        this.ctx.rect(x - size, y - size, size * 2, size * 2);
+                        break;
+                    case 'diamond':
+                        this.ctx.moveTo(x, y - size);
+                        this.ctx.lineTo(x + size, y);
+                        this.ctx.lineTo(x, y + size);
+                        this.ctx.lineTo(x - size, y);
+                        this.ctx.closePath();
+                        break;
+                    case 'circle':
+                        this.ctx.arc(x, y, size, 0, 2 * Math.PI);
+                        break;
+                    default:
+                        this.ctx.rect(x - size, y - size, size * 2, size * 2);
+                        break;
+                }
+                
+                this.ctx.fill();
+            }
+            
+            drawBlock(block) {
+                this.ctx.save();
+                
+                this.ctx.globalAlpha = block.opacity;
+                
+                this.ctx.translate(block.x + block.width/2, block.y + block.height/2);
+                this.ctx.scale(block.scale, block.scale);
+                this.ctx.translate(-block.width/2, -block.height/2);
+                
+                // Draw block shadow
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.fillRect(2, 2, block.width, block.height);
+                
+                // Draw main block - use interpolated color during merge animation
+                let currentColor = block.color;
+                if (block.colorAnimation && block.colorAnimation.isAnimating) {
+                    currentColor = block.colorAnimation.currentColor;
+                    block.color = currentColor;
+                }
+                this.ctx.fillStyle = currentColor;
+                this.ctx.fillRect(0, 0, block.width, block.height);
+                
+                // Draw block border
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(0, 0, block.width, block.height);
+                
+                // Always draw block number and timing info
+                this.ctx.fillStyle = '#fff';
+                this.ctx.textAlign = 'center';
+                
+                if (block.width >= 60) {
+                    // Full info for wider blocks
+                    this.ctx.font = 'bold 12px Arial';
+                    this.ctx.fillText("#" + block.index, block.width/2, block.height/2 - 8);
+                    
+                    // Show duration below block number
+                    this.ctx.font = '10px Arial';
+                    this.ctx.fillText(`${(block.duration / 1000).toFixed(1)}s`, block.width/2, block.height/2 + 2);
+                    
+                    // Show event data info if block has events
+                    if (block.events.length > 0) {
+                        this.ctx.font = 'bold 8px Arial';
+                        this.ctx.fillStyle = '#ffeb3b'; // Yellow for visibility
+                        this.ctx.fillText(`${block.events.length} event${block.events.length !== 1 ? 's' : ''}`, block.width/2, block.height/2 + 12);
+                    }
+                } else if (block.width >= 30) {
+                    // Medium blocks - show number and duration
+                    this.ctx.font = 'bold 10px Arial';
+                    this.ctx.fillText("#" + block.index, block.width/2, block.height/2 - 8);
+                    this.ctx.font = '8px Arial';
+                    this.ctx.fillText(`${(block.duration / 1000).toFixed(1)}s`, block.width/2, block.height/2 + 8);
+                } else {
+                    // Narrow blocks - just show block number
+                    this.ctx.font = 'bold 9px Arial';
+                    this.ctx.fillText("#" + block.index, block.width/2, block.height/2);
+                }
+                
+                
+                // Draw event indicators (within transformation context)
+                this.drawEventIndicators(block);
+                
+                this.ctx.restore();
+            }
+            
+            drawBlockProcessor() {
+                const nowPosition = this.canvas.width * 0.725;
+                const boxWidth = 180;
+                const boxHeight = 120;
+                const boxX = nowPosition - boxWidth / 2;
+                const boxY = 230;
+
+                this.ctx.save();
+
+                // Draw the main box
+                this.ctx.fillStyle = 'rgba(25, 177, 123, 0.1)';
+                this.ctx.strokeStyle = '#19b17b';
+                this.ctx.lineWidth = 1;
+                this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+                this.ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+                // Draw title
+                this.ctx.fillStyle = '#19b17b';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('Block Processor', nowPosition, boxY + 20);
+
+                // State machine diagram elements
+                const states = {
+                    pending: { x: boxX + 40, y: boxY + 50, label: 'A\'' },
+                    processing: { x: boxX + 140, y: boxY + 50, label: 'B' },
+                    toSql: { x: boxX + 40, y: boxY + 100, label: 'C' },
+                    toPaima: { x: boxX + 140, y: boxY + 100, label: 'D' }
+                };
+
+                const { isAnimating, highlightedStateKey, highlightedArrowKey } = this.engine.blockProcessor;
+
+                // Draw states (circles)
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = '10px Arial';
+                Object.entries(states).forEach(([key, state]) => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(state.x, state.y, 15, 0, 2 * Math.PI);
+                    this.ctx.fillStyle = '#2a2a2a';
+                    this.ctx.fill();
+
+                    if (isAnimating && key === highlightedStateKey) {
+                        this.ctx.strokeStyle = '#3498db';
+                        this.ctx.lineWidth = 2;
+                    } else {
+                        this.ctx.strokeStyle = '#19b17b';
+                        this.ctx.lineWidth = 1;
+                    }
+                    this.ctx.stroke();
+
+                    if (isAnimating && key === highlightedStateKey) {
+                        this.ctx.fillStyle = '#3498db';
+                    } else {
+                        this.ctx.fillStyle = '#fff';
+                    }
+                    this.ctx.fillText(state.label, state.x, state.y + 5);
+                });
+
+                // Draw arrows
+                this.drawArrow(states.pending, states.processing, isAnimating && highlightedArrowKey && highlightedArrowKey[0] === 'pending' && highlightedArrowKey[1] === 'processing');
+                this.drawArrow(states.processing, states.toSql, isAnimating && highlightedArrowKey && highlightedArrowKey[0] === 'processing' && highlightedArrowKey[1] === 'toSql');
+                this.drawArrow(states.processing, states.toPaima, isAnimating && highlightedArrowKey && highlightedArrowKey[0] === 'processing' && highlightedArrowKey[1] === 'toPaima');
+
+                this.ctx.restore();
+            }
+
+            drawArrow(from, to, isHighlighted = false) {
+                const headlen = 10; // length of head in pixels
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const angle = Math.atan2(dy, dx);
+
+                // Adjust start and end points to be on the edge of the circles
+                const startX = from.x + 15 * Math.cos(angle);
+                const startY = from.y + 15 * Math.sin(angle);
+                const endX = to.x - 15 * Math.cos(angle);
+                const endY = to.y - 15 * Math.sin(angle);
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(startX, startY);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.lineTo(endX - headlen * Math.cos(angle - Math.PI / 6), endY - headlen * Math.sin(angle - Math.PI / 6));
+                this.ctx.moveTo(endX, endY);
+                this.ctx.lineTo(endX - headlen * Math.cos(angle + Math.PI / 6), endY - headlen * Math.sin(angle + Math.PI / 6));
+
+                if (isHighlighted) {
+                    this.ctx.strokeStyle = '#3498db';
+                    this.ctx.lineWidth = 2;
+                } else {
+                    this.ctx.strokeStyle = '#19b17b';
+                    this.ctx.lineWidth = 1;
+                }
+                this.ctx.stroke();
+            }
+
+            render() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Update engine logic only if not paused
+                if (!this.isPaused) {
+                    this.engine.update();
+                }
+                
+                // Draw title
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = 'bold 24px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.shadowBlur = 0; // Clear any shadow effects
+                this.ctx.fillText('Cross-Blockchain Merging and Interoperability with Paima Engine', this.canvas.width/2, 40);
+                
+                // Draw pause indicator
+                if (this.isPaused) {
+                    this.ctx.fillStyle = '#e74c3c';
+                    this.ctx.font = 'bold 18px Arial';
+                    this.ctx.fillText('⏸️ PAUSED', this.canvas.width/2, 65);
+                }
+                
+                // Draw SQL tables
+                Object.values(this.engine.tables).forEach(table => {
+                    this.drawTable(table);
+                });
+                
+                // Draw Block Processor
+                this.drawBlockProcessor();
+
+                // Draw event legend
+                this.drawEventLegend();
+                
+                // Draw NOW line
+                this.drawNowLine();
+                
+                // Draw all actions
+                this.engine.actions.forEach(action => {
+                    this.drawAction(action);
+                });
+                
+                // Draw all blockchains
+                this.engine.blockchains.forEach((blockchain, index) => {
+                    // Always show blockchain labels
+                    const labelColor = blockchain.name === 'Paima Engine' ? '#19b17b' : '#fff';
+                    this.drawChainLabel(blockchain.yPosition, blockchain.name, 40, labelColor);
+                    
+                    // Draw all blocks if they exist
+                    blockchain.blocks.forEach(block => {
+                        this.drawBlock(block);
+                    });
+                });
+                
+                // Draw processed events so they appear on top of blocks
+                this.engine.processedEvents.forEach(pe => {
+                    this.drawProcessedEvent(pe);
+                });
+
+                // Draw event particles
+                this.engine.eventParticles.forEach(particle => {
+                    particle.render(this.ctx);
+                });
+                
+                // Draw current status
+                this.ctx.font = '16px Arial';
+                this.ctx.fillStyle = '#aaa';
+                this.ctx.textAlign = 'center';
+                const status = this.engine.getStatus();
+                this.ctx.fillText(status, this.canvas.width/2, this.canvas.height - 5);
+                
+                // Continue animation
+                this.animationId = requestAnimationFrame(() => this.render());
+            }
+
+            drawNowLine() {
+                // Draw "now" indicator line - fixed at 80% of canvas width
+                const nowPosition = this.canvas.width * 0.8;
+                this.ctx.strokeStyle = '#19b17b';
+                this.ctx.lineWidth = 3;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(nowPosition, 280); // Start below the actions row
+                this.ctx.lineTo(nowPosition, this.canvas.height - 40);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]); // Reset dash pattern
+
+                // Draw "NOW" label
+                this.ctx.fillStyle = '#19b17b';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('NOW', nowPosition, this.canvas.height - 20);
+            }
+            
+            drawProcessedEvent(pe) {
+                this.ctx.save();
+                this.ctx.fillStyle = pe.color;
+                this.ctx.beginPath();
+                this.ctx.arc(pe.x, pe.y, pe.radius, 0, 2 * Math.PI);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+
+            drawEventLegend() {
+                const legendX = this.canvas.width - 150; // Position near right edge
+                const legendY = this.canvas.height - 120; // Position near bottom
+                const dotSize = 4;
+                const lineHeight = 16;
+                
+                // Event type colors and labels
+                const eventTypes = [
+                    { type: 'erc20_transfer', color: '#f39c12', label: 'ERC20 Transfer' },
+                    { type: 'erc721_transfer', color: '#9b59b6', label: 'ERC721 Transfer' },
+                    { type: 'game_move', color: '#3498db', label: 'Game Move' },
+                    { type: 'account_created', color: '#2ecc71', label: 'Account Created' }
+                ];
+                
+                // Draw legend background
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.ctx.fillRect(legendX - 10, legendY - 15, 140, 90);
+                
+                // Draw legend border
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(legendX - 10, legendY - 15, 140, 90);
+                
+                // Draw legend title
+                this.ctx.fillStyle = '#ccc';
+                this.ctx.font = 'bold 10px Arial';
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText('Event Types:', legendX, legendY);
+                
+                // Draw legend items
+                eventTypes.forEach((item, index) => {
+                    const itemY = legendY + 15 + (index * lineHeight);
+                    
+                    // Draw colored dot
+                    this.ctx.fillStyle = item.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(legendX + 5, itemY - 3, dotSize / 2, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                    
+                    // Draw dot border
+                    this.ctx.strokeStyle = '#000';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.stroke();
+                    
+                    // Draw label
+                    this.ctx.fillStyle = '#aaa';
+                    this.ctx.font = '9px Arial';
+                    this.ctx.fillText(item.label, legendX + 12, itemY);
+                });
+            }
+            
+            start() {
+                this.render();
+            }
+            
+            stop() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+        }
+        
+        // Initialize and start the animation
+        const renderer = new CanvasRenderer('animationCanvas');
+        renderer.start();
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            renderer.stop();
+        });
+    </script>
+</body>
+</html>

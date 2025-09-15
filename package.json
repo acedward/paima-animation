@@ -1,0 +1,22 @@
+{
+  "name": "paima-blockchain-engine",
+  "version": "1.0.0",
+  "description": "A blockchain animation engine demonstrating Paima Engine's multi-chain merging capabilities",
+  "main": "blockchain-engine.js",
+  "scripts": {
+    "test": "node test-engine.js",
+    "demo": "node test-engine.js"
+  },
+  "keywords": [
+    "blockchain",
+    "animation",
+    "paima",
+    "multi-chain",
+    "visualization"
+  ],
+  "author": "Paima Engine Demo",
+  "license": "MIT",
+  "engines": {
+    "node": ">=12.0.0"
+  }
+} 
