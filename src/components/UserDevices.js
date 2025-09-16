@@ -63,8 +63,20 @@ export class UserDevices {
         this.devices = this.devices.filter(d => d.isActive !== false);
     }
 
-    drawContainer(ctx) {
-        // Define user device area and box
+    getTooltipData() {
+        return {
+            title: 'User Devices',
+            content: 'Simulates a collection of user devices sending requests to the batcher.',
+            data: `Device Count: ${this.devices.length}`
+        };
+    }
+
+    isInside(x, y) {
+        const rect = this.getContainerRect();
+        return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+    }
+
+    getContainerRect() {
         const userDevicesArea = {
             x: this.engine.canvasWidth * 0.87,
             y: this.engine.canvasHeight * 0.7,
@@ -74,10 +86,17 @@ export class UserDevices {
         const boxPadding = 15;
         const titleHeight = 30;
 
-        const boxX = userDevicesArea.x - boxPadding;
-        const boxWidth = userDevicesArea.width + (2 * boxPadding) + 20; // a bit wider
-        const boxY = userDevicesArea.y - boxPadding - titleHeight;
-        const boxHeight = userDevicesArea.height + (2 * boxPadding) + titleHeight;
+        return {
+            x: userDevicesArea.x - boxPadding,
+            width: userDevicesArea.width + (2 * boxPadding) + 20,
+            y: userDevicesArea.y - boxPadding - titleHeight,
+            height: userDevicesArea.height + (2 * boxPadding) + titleHeight
+        };
+    }
+
+    drawContainer(ctx) {
+        // Define user device area and box
+        const rect = this.getContainerRect();
 
         ctx.save();
 
@@ -85,14 +104,14 @@ export class UserDevices {
         ctx.fillStyle = 'rgba(25, 177, 123, 0.1)';
         ctx.strokeStyle = '#19b17b';
         ctx.lineWidth = 1;
-        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
 
         // Draw title for User Devices
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('User Devices', boxX + boxWidth / 2, boxY + 20);
+        ctx.fillText('User Devices', rect.x + rect.width / 2, rect.y + 20);
 
         ctx.restore();
     }

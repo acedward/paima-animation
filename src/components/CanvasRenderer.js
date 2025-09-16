@@ -5,6 +5,7 @@ import { randomMultipliers } from '../random.js';
 import { EventLegend } from './EventLegend.js';
 import { Chain } from './Chain.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
+import { NowLine } from './NowLine.js';
 
 /**
  * @class CanvasRenderer
@@ -25,6 +26,7 @@ export class CanvasRenderer {
         this.lastUpdateTime = 0;
         
         this.eventLegend = new EventLegend(this.canvas.width - 165, this.canvas.height - 120);
+        this.nowLine = new NowLine(this.canvas);
         
         // Initialize the blockchain engine with only Paima Engine
         this.engine = new BlockchainEngine(this.canvas.width);
@@ -291,6 +293,11 @@ export class CanvasRenderer {
             }
         }
 
+        // Check UserDevices container
+        if (this.engine.userDevices && this.engine.userDevices.isInside(x, y)) {
+            return this.engine.userDevices.getTooltipData();
+        }
+
         return null;
     }
     
@@ -502,7 +509,7 @@ export class CanvasRenderer {
         this.eventLegend.draw(this.ctx, this.engine.eventParticles);
         
         // Draw NOW line
-        this.drawNowLine();
+        this.nowLine.draw(this.ctx);
 
         
         // Draw all actions
@@ -553,25 +560,6 @@ export class CanvasRenderer {
         
         // Continue animation
         this.animationId = requestAnimationFrame(() => this.render());
-    }
-
-    drawNowLine() {
-        // Draw "now" indicator line - fixed at 80% of canvas width
-        const nowPosition = this.canvas.width * 0.8;
-        this.ctx.strokeStyle = '#19b17b';
-        this.ctx.lineWidth = 3;
-        this.ctx.setLineDash([5, 5]);
-        this.ctx.beginPath();
-        this.ctx.moveTo(nowPosition, 360); // Start below the actions row
-        this.ctx.lineTo(nowPosition, this.canvas.height - 40);
-        this.ctx.stroke();
-        this.ctx.setLineDash([]); // Reset dash pattern
-
-        // Draw "NOW" label
-        this.ctx.fillStyle = '#19b17b';
-        this.ctx.font = 'bold 14px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('NOW', nowPosition, this.canvas.height - 20);
     }
     
     start() {

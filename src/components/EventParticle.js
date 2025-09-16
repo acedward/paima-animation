@@ -32,6 +32,8 @@ export class EventParticle {
         // Calculate offset from block position
         this.offsetX = endX - targetBlock.x; // Offset from block's left edge
         this.offsetY = endY - targetBlock.y; // Offset from block's top edge
+
+        this.lastPosition = { x: startX, y: startY };
     }
 
     startFadingOut() {
@@ -74,6 +76,11 @@ export class EventParticle {
             // Particle has reached destination, follow the block
             this.currentX = currentEndX;
             this.currentY = currentEndY;
+            if (this.currentX === this.lastPosition.x && this.currentY === this.lastPosition.y) {
+                this.isFadingOut = true;
+                this.fadeStartTime = Date.now();
+            }
+            this.lastPosition = { x: this.currentX, y: this.currentY };
         }
     }
     
