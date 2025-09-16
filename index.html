@@ -331,7 +331,7 @@
                     <button class="preset-btn" data-name="XAI" data-time="0.2" data-type="probability">XAI (0.1s-0.3s)</button>
                     <button class="preset-btn" data-name="Ethereum" data-time="12">Ethereum (12s)</button>
                     <button class="preset-btn" data-name="Arbitrum" data-time="0.25">Arbitrum (0.25s)</button>
-                    <button class="preset-btn" data-name="Solana" data-time="0.4">Solana (0.4s)</button>
+                    <button class="preset-btn" data-name="Avail" data-time="2">Avail (20s)</button>
                     <button class="preset-btn" data-name="Cardano" data-time="20">Cardano (20s)</button>
                     <button class="preset-btn" data-name="Midnight" data-time="6">Midnight (6s)</button>
                     <button class="preset-btn" data-name="Polygon" data-time="2">Polygon (2s)</button>
@@ -434,13 +434,17 @@
                     console.log('Added Ethereum blockchain');
                 }, 7600);
                 
-                // After 12 seconds, add Cardano, Midnight, and Solana
-                setTimeout(() => {
+                // After 12 seconds, add Cardano, Midnight
+                setTimeout(() => {  
                     this.addChainProgrammatically('Cardano', 20);
                     this.addChainProgrammatically('Midnight', 6);
-                    this.addChainProgrammatically('Solana', 0.4);
-                    console.log('Added Cardano, Midnight, and Solana blockchains');
+                    console.log('Added Cardano, Midnight blockchains');
                 }, 11400);
+
+                setTimeout(() => {
+                    this.addChainProgrammatically('Avail', 20);
+                    console.log('Added Avail blockchain');
+                }, 11500);
             }
             
             chainSpacing = 80;
@@ -1301,6 +1305,47 @@
                 // Draw Block Processor
                 this.drawBlockProcessor();
 
+                // Draw Batcher and User Devices
+                if (this.engine.batcher) {
+                    this.drawBatcher(this.engine.batcher);
+                }
+                
+                // Define user device area and box
+                const userDevicesArea = {
+                    x: this.canvas.width * 0.87,
+                    y: this.canvas.height * 0.7,
+                    width: 80,
+                    height: 80
+                };
+                const boxPadding = 15;
+                const titleHeight = 30;
+
+                const boxX = userDevicesArea.x - boxPadding;
+                const boxWidth = userDevicesArea.width + (2 * boxPadding) + 20; // a bit wider
+                const boxY = userDevicesArea.y - boxPadding - titleHeight;
+                const boxHeight = userDevicesArea.height + (2 * boxPadding) + titleHeight;
+
+                this.ctx.save();
+
+                // Draw the semi-transparent box
+                this.ctx.fillStyle = 'rgba(25, 177, 123, 0.1)';
+                this.ctx.strokeStyle = '#19b17b';
+                this.ctx.lineWidth = 1;
+                this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+                this.ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+                // Draw title for User Devices
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('User Devices', boxX + boxWidth / 2, boxY + 20);
+
+                this.ctx.restore();
+
+                this.engine.userDevices.forEach(device => {
+                    this.drawUserDevice(device);
+                });
+
                 // Draw event legend
                 this.drawEventLegend();
                 
@@ -1334,6 +1379,19 @@
                     particle.render(this.ctx);
                 });
                 
+                this.engine.userRequestParticles.forEach(particle => {
+                    this.drawUserRequestParticle(particle);
+                });
+
+                this.engine.blockProcessorParticles.forEach(particle => {
+                    this.drawBlockProcessorParticle(particle);
+                });
+
+                // Draw batcher particles
+                this.engine.batcherParticles.forEach(particle => {
+                    this.drawBatcherParticle(particle);
+                });
+
                 // Draw current status
                 this.ctx.font = '16px Arial';
                 this.ctx.fillStyle = '#aaa';
@@ -1352,7 +1410,7 @@
                 this.ctx.lineWidth = 3;
                 this.ctx.setLineDash([5, 5]);
                 this.ctx.beginPath();
-                this.ctx.moveTo(nowPosition, 280); // Start below the actions row
+                this.ctx.moveTo(nowPosition, 360); // Start below the actions row
                 this.ctx.lineTo(nowPosition, this.canvas.height - 40);
                 this.ctx.stroke();
                 this.ctx.setLineDash([]); // Reset dash pattern
@@ -1433,6 +1491,67 @@
                     cancelAnimationFrame(this.animationId);
                     this.animationId = null;
                 }
+            }
+
+            drawBatcher(batcher) {
+                this.ctx.save();
+                this.ctx.fillStyle = batcher.color;
+                this.ctx.fillRect(batcher.x, batcher.y, batcher.width, batcher.height);
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(batcher.x, batcher.y, batcher.width, batcher.height);
+
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('Batcher', batcher.x + batcher.width / 2, batcher.y + 20);
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText(`Received: ${batcher.requestsReceived}`, batcher.x + batcher.width / 2, batcher.y + 40);
+                this.ctx.restore();
+            }
+
+            drawUserDevice(device) {
+                this.ctx.save();
+                this.ctx.globalAlpha = device.opacity;
+                this.ctx.fillStyle = device.color;
+                this.ctx.beginPath();
+                this.ctx.arc(device.x, device.y, device.radius, 0, 2 * Math.PI);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+
+            drawUserRequestParticle(particle) {
+                this.ctx.save();
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.beginPath();
+                this.ctx.arc(particle.currentX, particle.currentY, 2, 0, 2 * Math.PI);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+
+            drawBlockProcessorParticle(particle) {
+                this.ctx.save();
+                this.ctx.fillStyle = '#f39c12'; // A different color to distinguish
+                this.ctx.beginPath();
+                this.ctx.arc(particle.currentX, particle.currentY, 3, 0, 2 * Math.PI);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+
+            drawBatcherParticle(particle) {
+                if (!particle.isActive) return;
+                this.ctx.save();
+                this.ctx.globalAlpha = particle.opacity || 1.0;
+                this.ctx.fillStyle = particle.color;
+                this.ctx.beginPath();
+                this.ctx.arc(particle.currentX, particle.currentY, 3, 0, 2 * Math.PI); // A bit larger
+                
+                // Add a glow
+                this.ctx.shadowColor = particle.color;
+                this.ctx.shadowBlur = 8;
+                this.ctx.fill();
+
+                this.ctx.restore();
             }
         }
         

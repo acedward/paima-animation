@@ -151,6 +151,7 @@
             this.events = []; // Store blockchain events
             this.blockchain = blockchain; // Reference to the blockchain this block belongs to
             this.eventsProcessed = false; // Track if events from this block have been processed
+            this.accumulatedEvents = [];
             this.colorAnimation = {
                 isAnimating: false,
                 startTime: 0,
@@ -187,8 +188,45 @@
                     this.color = this.colorAnimation.targetColor; // Final color
                 }
             }
+            if (this.accumulatedEvents.length > 0) {
+                this.layoutAccumulatedEvents();
+            }
         }
         
+        addAccumulatedEvent(event) {
+            if (!this.accumulatedEvents.includes(event)) {
+                this.accumulatedEvents.push(event);
+                this.layoutAccumulatedEvents();
+            }
+        }
+    
+        removeAccumulatedEvent(event) {
+            const index = this.accumulatedEvents.indexOf(event);
+            if (index > -1) {
+                this.accumulatedEvents.splice(index, 1);
+                this.layoutAccumulatedEvents();
+            }
+        }
+    
+        layoutAccumulatedEvents() {
+            const startXInsideBlock = 5;
+            const startYInsideBlock = this.height - 5;
+            const spacing = 8;
+            const rowHeight = 8;
+            const eventsPerRow = Math.floor((this.width - startXInsideBlock * 2) / spacing);
+    
+            if (eventsPerRow <= 0) return;
+    
+            this.accumulatedEvents.forEach((event, index) => {
+                const row = Math.floor(index / eventsPerRow);
+                const col = index % eventsPerRow;
+    
+                event.x = this.x + startXInsideBlock + col * spacing;
+                event.y = this.y + startYInsideBlock - row * rowHeight;
+                event.radius = 3;
+            });
+        }
+
         startColorAnimation(targetColor) {
             this.colorAnimation.isAnimating = true;
             this.colorAnimation.startTime = Date.now();
@@ -316,6 +354,7 @@
             this.currentPathSegment = 0;
             this.segmentStartTime = Date.now();
             this.hasReached = false;
+            this.addedToBlock = false;
 
             const bp = this.engine.blockProcessor;
             const start = { x: action.x, y: action.y };
@@ -327,7 +366,7 @@
                 finalTargetPos = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
                 const bottomExit = { x: bp.bottomExitX, y: bp.bottomExitY };
                 this.path = [start, center, bottomExit, finalTargetPos];
-                this.pathDurations = [500, 300, 1200]; // ms for each segment
+                this.pathDurations = [500, 300, 600]; // ms for each segment
                 this.color = '#006400'; // Darker green
             } else { // target is a table (SQL)
                 finalTargetPos = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
@@ -348,11 +387,13 @@
 
             if (this.hasReached) {
                 if (this.target instanceof Block) {
-                    this.x = this.target.x + this.target.width / 2;
-                    this.y = this.target.y + this.target.height / 2;
-                    // Deactivate if the block is off-screen
+                    if (!this.addedToBlock) {
+                        this.target.addAccumulatedEvent(this);
+                        this.addedToBlock = true;
+                    }
                     if (this.target.x + this.target.width < -100) {
                         this.isActive = false;
+                        this.target.removeAccumulatedEvent(this);
                     }
                 } else {
                     this.isActive = false;
@@ -503,10 +544,233 @@
             ctx.restore();
         }
     }
+
+    class UserRequestParticle {
+        constructor(startX, startY, endX, endY, duration = 1500) {
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = endX;
+            this.endY = endY;
+            this.currentX = startX;
+            this.currentY = startY;
+            this.duration = duration;
+            this.startTime = Date.now();
+            this.isActive = true;
+            this.hasReached = false;
+        }
+
+        update() {
+            if (!this.isActive) return;
+
+            const elapsed = Date.now() - this.startTime;
+            const progress = Math.min(elapsed / this.duration, 1);
+
+            if (!this.hasReached) {
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                this.currentX = this.startX + (this.endX - this.startX) * easeProgress;
+                this.currentY = this.startY + (this.endY - this.startY) * easeProgress;
+
+                if (progress >= 1) {
+                    this.hasReached = true;
+                    this.isActive = false; // Deactivate when it reaches the batcher
+                }
+            }
+        }
+    }
+
+    class BlockProcessorParticle {
+        constructor(startX, startY, endX, endY, duration = 1500) {
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = endX;
+            this.endY = endY;
+            this.currentX = startX;
+            this.currentY = startY;
+            this.duration = duration;
+            this.startTime = Date.now();
+            this.isActive = true;
+            this.hasReached = false;
+        }
+
+        update() {
+            if (!this.isActive) return;
+
+            const elapsed = Date.now() - this.startTime;
+            const progress = Math.min(elapsed / this.duration, 1);
+
+            if (!this.hasReached) {
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                this.currentX = this.startX + (this.endX - this.startX) * easeProgress;
+                this.currentY = this.startY + (this.endY - this.startY) * easeProgress;
+
+                if (progress >= 1) {
+                    this.hasReached = true;
+                    this.isActive = false; // Deactivate when it reaches the batcher
+                }
+            }
+        }
+    }
+
+    class UserDevice {
+        constructor(x, y, name = 'User') {
+            this.x = x;
+            this.y = y;
+            this.radius = 5;
+            this.color = '#ffffff';
+            this.name = name;
+            this.lastRequestTime = Date.now();
+            this.requestInterval = Math.random() * 4000 + 1000;
+    
+            this.state = 'FADING_IN'; // FADING_IN, ACTIVE, FADING_OUT
+            this.opacity = 0;
+            this.fadeDuration = 1000; // 1 second fade
+            this.stateChangeTime = Date.now();
+            this.isActive = true;
+        }
+    
+        update(engine) {
+            const now = Date.now();
+            const elapsed = now - this.stateChangeTime;
+    
+            // Handle state and opacity
+            if (this.state === 'FADING_IN') {
+                this.opacity = Math.min(1, elapsed / this.fadeDuration);
+                if (this.opacity >= 1) {
+                    this.state = 'ACTIVE';
+                }
+            } else if (this.state === 'FADING_OUT') {
+                this.opacity = Math.max(0, 1 - (elapsed / this.fadeDuration));
+                if (this.opacity <= 0) {
+                    this.isActive = false; // Mark for removal
+                }
+            }
+    
+            // Only send requests if active
+            if (this.state === 'ACTIVE' && now - this.lastRequestTime > this.requestInterval) {
+                this.lastRequestTime = now;
+                this.requestInterval = Math.random() * 4000 + 1000;
+                
+                if (engine.batcher) {
+                    const particle = new UserRequestParticle(
+                        this.x,
+                        this.y,
+                        engine.batcher.x + engine.batcher.width / 2,
+                        engine.batcher.y + engine.batcher.height / 2
+                    );
+                    engine.userRequestParticles.push(particle);
+                }
+            }
+        }
+    
+        disappear() {
+            if (this.state === 'ACTIVE') {
+                this.state = 'FADING_OUT';
+                this.stateChangeTime = Date.now();
+            }
+        }
+    }
+
+    class BatcherParticle {
+        constructor(startX, startY, targetChain, event, engine, duration = 1000) {
+            this.startX = startX;
+            this.startY = startY;
+            this.currentX = startX;
+            this.currentY = startY;
+            
+            this.targetChain = targetChain; // Store the whole chain object
+            this.engine = engine;
+            this.event = event;
+            
+            this.duration = duration;
+            this.startTime = Date.now();
+            this.isActive = true;
+            
+            this.state = 'TRAVELING_TO_WAIT_POINT'; // TRAVELING_TO_WAIT_POINT, WAITING
+            
+            const eventColors = {
+                'erc20_transfer': '#f39c12',
+                'erc721_transfer': '#9b59b6',
+                'game_move': '#3498db',
+                'account_created': '#2ecc71'
+            };
+            this.color = eventColors[event.type] || '#e67e22';
+            this.opacity = 1.0;
+        }
+    
+        update() {
+            if (!this.isActive) return;
+    
+            const nowPosition = this.engine.blockProcessor.nowPosition;
+            const waitPositionX = nowPosition + 100;
+            // Target Y is the middle of the chain's row
+            const targetY = this.targetChain.yPosition + blockHeight / 2; 
+    
+            if (this.state === 'TRAVELING_TO_WAIT_POINT') {
+                const elapsed = Date.now() - this.startTime;
+                const progress = Math.min(elapsed / this.duration, 1);
+                
+                const easeProgress = 1 - Math.pow(1 - progress, 2);
+                this.currentX = this.startX + (waitPositionX - this.startX) * easeProgress;
+                this.currentY = this.startY + (targetY - this.startY) * easeProgress;
+    
+                if (progress >= 1) {
+                    this.state = 'WAITING';
+                    this.currentX = waitPositionX;
+                    this.currentY = targetY;
+                }
+            } else if (this.state === 'WAITING') {
+                // Just wait at the position
+                this.currentX = waitPositionX;
+                this.currentY = targetY;
+            }
+        }
+    }
+
+    class Batcher {
+        constructor(x, y) {
+            this.x = x - 50;
+            this.y = y;
+            this.width = 120;
+            this.height = 100;
+            this.color = '#2980b9';
+            this.requestsReceived = 0;
+        }
+
+        receiveRequest(engine) {
+            this.requestsReceived++;
+            // Find a random secondary chain
+            const secondaryChains = engine.blockchains.filter(bc => bc.name !== 'Paima Engine');
+
+            if (secondaryChains.length > 0) {
+                const randomChain = secondaryChains[Math.floor(Math.random() * secondaryChains.length)];
+                
+                const event = generateBlockchainEvent(randomChain.name);
+
+                if (event) {
+                    const particle = new BatcherParticle(
+                        this.x + this.width / 2,
+                        this.y + this.height / 2,
+                        randomChain, // Pass the whole chain object
+                        event,
+                        engine
+                    );
+                    engine.batcherParticles.push(particle);
+                }
+            }
+        }
+    }
     
     class BlockchainEngine {
-        constructor(canvasWidth = 1200) { // Updated from 1000 to 1200
+        _createNewUserDevice() {
+            const x = this.canvasWidth * 0.87 + Math.random() * 80; // Right side of the screen
+            const y = Math.random() * 80 + this.canvasHeight * 0.7; // Spread vertically
+            const deviceName = `User ${this.userDeviceCounter++}`;
+            return new UserDevice(x, y, deviceName);
+        }
+
+        constructor(canvasWidth = 1200, canvasHeight = 1000) {
             this.canvasWidth = canvasWidth;
+            this.canvasHeight = canvasHeight;
             this.blockCount = 0;
             this.lastFrameTime = Date.now();
             this.eventParticles = []; // Track animated event particles
@@ -514,6 +778,19 @@
             this.processedEvents = []; // Track events after processing
             this.actionCounter = 0; // Track action numbering
             this.currentMergeColorIndex = 0;
+            this.userDevices = [];
+            this.userDeviceCounter = 0;
+            this.batcher = null;
+            this.userRequestParticles = [];
+            this.batcherParticles = [];
+            this.blockProcessorParticles = [];
+
+            this.deviceLifecycleInterval = 2000;
+            this.nextDeviceCheck = Date.now() + this.deviceLifecycleInterval;
+            this.maxUserDevices = 20;
+            this.minUserDevices = 5;
+
+            this.blockProcessorToBatcherChance = 0.005;
 
             this.blockProcessor = {
                 nowPosition: this.canvasWidth * 0.725,
@@ -541,6 +818,7 @@
             
             // Initialize SQL tables
             this.initializeTables();
+            this.initializeBatcherAndDevices();
             
             // Blockchain configuration with consistent spacing - moved down to make room for tables and actions
             // const chainStartY = 310; // Moved down to make room for actions row
@@ -663,6 +941,26 @@
             };
         }
         
+        initializeBatcherAndDevices() {
+            this.batcher = new Batcher(this.canvasWidth * 0.9, this.canvasHeight / 2);
+
+            for (let i = 0; i < 10; i++) {
+                this.userDevices.push(this._createNewUserDevice());
+            }
+        }
+
+        blockProcessorSendsEventToBatcher() {
+            if (this.batcher) {
+                const particle = new BlockProcessorParticle(
+                    this.blockProcessor.centerX,
+                    this.blockProcessor.centerY,
+                    this.batcher.x + this.batcher.width / 2,
+                    this.batcher.y + this.batcher.height / 2
+                );
+                this.blockProcessorParticles.push(particle);
+            }
+        }
+
         // Get current engine time in milliseconds since start
         getCurrentTime() {
             return Date.now() - this.engineStartTime;
@@ -818,6 +1116,16 @@
             
             const block = new Block(x, blockchain.yPosition, color, counter, width, height, 0, startTime, endTime, blockchain);
             
+            // Consume waiting batcher particles for this chain
+            const waitingParticles = this.batcherParticles.filter(p => 
+                p.targetChain.name === blockchain.name && p.state === 'WAITING'
+            );
+        
+            waitingParticles.forEach(particle => {
+                block.events.push(particle.event);
+                particle.isActive = false; // Deactivate the particle
+            });
+
             // Add blockchain events to non-Paima blocks (70% chance)
             const time = block.endTime - block.startTime;
             // if time is more than 1000ms, then generate an event
@@ -941,12 +1249,59 @@
             
             // Update table blinking
             this.updateTableBlinking();
+
+            if (Math.random() < this.blockProcessorToBatcherChance) {
+                this.blockProcessorSendsEventToBatcher();
+            }
             
+            // Handle device lifecycle
+            if (Date.now() > this.nextDeviceCheck) {
+                // Attempt to remove a device
+                if (this.userDevices.length > this.minUserDevices && Math.random() < 0.5) {
+                    const activeDevices = this.userDevices.filter(d => d.state === 'ACTIVE');
+                    if (activeDevices.length > 0) {
+                        const deviceToDisappear = activeDevices[Math.floor(Math.random() * activeDevices.length)];
+                        deviceToDisappear.disappear();
+                    }
+                }
+        
+                // Attempt to add a device
+                if (this.userDevices.length < this.maxUserDevices && Math.random() < 0.5) {
+                    this.userDevices.push(this._createNewUserDevice());
+                }
+        
+                this.nextDeviceCheck = Date.now() + this.deviceLifecycleInterval;
+            }
+
             // Update event particles
             this.eventParticles.forEach(particle => particle.update(this));
             
+            // Update user devices and requests
+            this.userDevices.forEach(device => device.update(this));
+            this.userDevices = this.userDevices.filter(d => d.isActive !== false);
+
+            this.userRequestParticles.forEach(particle => {
+                particle.update();
+                if (particle.hasReached) {
+                    this.batcher.receiveRequest(this);
+                }
+            });
+
+            this.blockProcessorParticles.forEach(particle => {
+                particle.update();
+                if (particle.hasReached) {
+                    this.batcher.receiveRequest(this);
+                }
+            });
+
             // Remove inactive particles (but keep particles that have reached their destination)
             this.eventParticles = this.eventParticles.filter(particle => particle.isActive);
+            this.userRequestParticles = this.userRequestParticles.filter(p => p.isActive);
+            this.blockProcessorParticles = this.blockProcessorParticles.filter(p => p.isActive);
+
+            // Update batcher particles
+            this.batcherParticles.forEach(p => p.update());
+            this.batcherParticles = this.batcherParticles.filter(p => p.isActive);
 
             // Update processed events
             this.processedEvents.forEach(pe => pe.update());
