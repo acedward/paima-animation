@@ -8,6 +8,7 @@ import { BlockProcessorParticle } from './BlockProcessorParticle.js';
 import { EventParticle } from './EventParticle.js';
 import { ProcessedEvent } from './ProcessedEvent.js';
 import { UserDevice } from './UserDevice.js';
+import { UserDevices } from './UserDevices.js';
 import { randomMultipliers } from '../random.js';
 import { UserRequestParticle } from './UserRequestParticle.js';
 import { Table } from './Table.js';
@@ -16,13 +17,6 @@ import { EventTypes, processEvent } from './EventTypes.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
 
 export class BlockchainEngine {
-    _createNewUserDevice() {
-        const x = this.canvasWidth * 0.87 + Math.random() * randomMultipliers.userDeviceCreationPosition; // Right side of the screen
-        const y = Math.random() * randomMultipliers.userDeviceCreationPosition + this.canvasHeight * 0.7; // Spread vertically
-        const deviceName = `User ${this.userDeviceCounter++}`;
-        return new UserDevice(x, y, deviceName);
-    }
-
     constructor(canvasWidth = 1200, canvasHeight = 1000) {
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
@@ -33,17 +27,11 @@ export class BlockchainEngine {
         this.processedEvents = []; // Track events after processing
         this.actionCounter = 0; // Track action numbering
         this.currentMergeColorIndex = 0;
-        this.userDevices = [];
-        this.userDeviceCounter = 0;
+        this.userDevices = new UserDevices(this);
         this.batcher = null;
         this.userRequestParticles = [];
         this.batcherParticles = [];
         this.blockProcessorParticles = [];
-
-        this.deviceLifecycleInterval = 2000;
-        this.nextDeviceCheck = Date.now() + this.deviceLifecycleInterval;
-        this.maxUserDevices = 20;
-        this.minUserDevices = 5;
 
         this.blockProcessorToBatcherChance = 0.005;
 
@@ -95,10 +83,6 @@ export class BlockchainEngine {
     
     initializeBatcherAndDevices() {
         this.batcher = new Batcher(this.canvasWidth * 0.9, this.canvasHeight / 2);
-
-        for (let i = 0; i < 10; i++) {
-            this.userDevices.push(this._createNewUserDevice());
-        }
     }
 
     blockProcessorSendsEventToBatcher() {
@@ -264,31 +248,11 @@ export class BlockchainEngine {
             this.blockProcessorSendsEventToBatcher();
         }
         
-        // Handle device lifecycle
-        if (Date.now() > this.nextDeviceCheck) {
-            // Attempt to remove a device
-            if (this.userDevices.length > this.minUserDevices && Math.random() < randomMultipliers.deviceRemovalChance) {
-                const activeDevices = this.userDevices.filter(d => d.state === 'ACTIVE');
-                if (activeDevices.length > 0) {
-                    const deviceToDisappear = activeDevices[Math.floor(Math.random() * activeDevices.length)];
-                    deviceToDisappear.disappear();
-                }
-            }
-    
-            // Attempt to add a device
-            if (this.userDevices.length < this.maxUserDevices && Math.random() < randomMultipliers.deviceAdditionChance) {
-                this.userDevices.push(this._createNewUserDevice());
-            }
-    
-            this.nextDeviceCheck = Date.now() + this.deviceLifecycleInterval;
-        }
-
         // Update event particles
         this.eventParticles.forEach(particle => particle.update(this));
         
         // Update user devices and requests
-        this.userDevices.forEach(device => device.update(this));
-        this.userDevices = this.userDevices.filter(d => d.isActive !== false);
+        this.userDevices.update();
 
         this.userRequestParticles.forEach(particle => {
             particle.update();

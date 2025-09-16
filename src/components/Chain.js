@@ -43,6 +43,14 @@ export class Chain {
         return block;
     }
 
+    drawLabel(ctx) {
+        const color = this.name === 'Paima Engine' ? '#19b17b' : '#fff';
+        ctx.fillStyle = color;
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(this.name, 20, this.yPosition - 10);
+    }
+
     getTimingLabel() {
         if (this.timing.type === 'fixed') {
             return `(${this.timing.interval / 1000}s)`;

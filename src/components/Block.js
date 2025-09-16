@@ -210,7 +210,7 @@ export class Block {
         // Draw event indicators at the same positions where particles will land
         const dotSize = 3;
         
-        if (this.blockchain.name === 'Paima Engine') return;
+        // if (this.blockchain.name === 'Paima Engine') return;
         allEvents.forEach((event, index) => {
             // Same positioning as particles: x=10, x=20, x=30, etc.
             const eventX = 10 + (index * 10);
@@ -226,9 +226,9 @@ export class Block {
             ctx.fill();
             
             // Draw small border around dot
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+            // ctx.strokeStyle = '#000';
+            // ctx.lineWidth = 0.5;
+            // ctx.stroke();
         });
     }
 

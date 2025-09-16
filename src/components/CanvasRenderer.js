@@ -318,7 +318,7 @@ export class CanvasRenderer {
         }
 
         // Check User Devices
-        for (let device of this.engine.userDevices) {
+        for (let device of this.engine.userDevices.devices) {
             if (device.isInside(x, y)) {
                 return device.getTooltipData();
             }
@@ -526,79 +526,6 @@ export class CanvasRenderer {
     
     // All the existing drawing methods remain the same...
     
-    drawChainLabel(y, label, height, color = '#fff', x = 20) {
-        this.ctx.fillStyle = color;
-        this.ctx.font = 'bold 16px Arial';
-        this.ctx.textAlign = 'left';
-        // Position label above the blocks
-        this.ctx.fillText(label, x, y - 10);
-    }
-    
-    drawBlock(block) {
-        this.ctx.save();
-        
-        this.ctx.globalAlpha = block.opacity;
-        
-        this.ctx.translate(block.x + block.width/2, block.y + block.height/2);
-        this.ctx.scale(block.scale, block.scale);
-        this.ctx.translate(-block.width/2, -block.height/2);
-        
-        // Draw block shadow
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        this.ctx.fillRect(2, 2, block.width, block.height);
-        
-        // Draw main block - use interpolated color during merge animation
-        let currentColor = block.color;
-        if (block.colorAnimation && block.colorAnimation.isAnimating) {
-            currentColor = block.colorAnimation.currentColor;
-            block.color = currentColor;
-        }
-        this.ctx.fillStyle = currentColor;
-        this.ctx.fillRect(0, 0, block.width, block.height);
-        
-        // Draw block border
-        this.ctx.strokeStyle = '#fff';
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(0, 0, block.width, block.height);
-        
-        // Always draw block number and timing info
-        this.ctx.fillStyle = '#fff';
-        this.ctx.textAlign = 'center';
-        
-        if (block.width >= 60) {
-            // Full info for wider blocks
-            this.ctx.font = 'bold 12px Arial';
-            this.ctx.fillText("#" + block.index, block.width/2, block.height/2 - 8);
-            
-            // Show duration below block number
-            this.ctx.font = '10px Arial';
-            this.ctx.fillText(`${(block.duration / 1000).toFixed(1)}s`, block.width/2, block.height/2 + 2);
-            
-            const eventCount = block.events.length + (block.accumulatedEvents || []).reduce((sum, pe) => sum + (pe.events ? pe.events.length : 0), 0);
-            // Show event data info if block has events
-            if (eventCount > 0) {
-                this.ctx.font = 'bold 8px Arial';
-                this.ctx.fillStyle = '#ffeb3b'; // Yellow for visibility
-                this.ctx.fillText(`${eventCount} event${eventCount !== 1 ? 's' : ''}`, block.width/2, block.height/2 + 12);
-            }
-        } else if (block.width >= 30) {
-            // Medium blocks - show number and duration
-            this.ctx.font = 'bold 10px Arial';
-            this.ctx.fillText("#" + block.index, block.width/2, block.height/2 - 8);
-            this.ctx.font = '8px Arial';
-            this.ctx.fillText(`${(block.duration / 1000).toFixed(1)}s`, block.width/2, block.height/2 + 8);
-        } else {
-            // Narrow blocks - just show block number
-            this.ctx.font = 'bold 9px Arial';
-            this.ctx.fillText("#" + block.index, block.width/2, block.height/2);
-        }
-        
-        
-        // Draw event indicators (within transformation context)
-        
-        this.ctx.restore();
-    }
-    
     render() {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -635,39 +562,9 @@ export class CanvasRenderer {
             this.engine.batcher.draw(this.ctx);
         }
         
-        // Define user device area and box
-        const userDevicesArea = {
-            x: this.canvas.width * 0.87,
-            y: this.canvas.height * 0.7,
-            width: 80,
-            height: 80
-        };
-        const boxPadding = 15;
-        const titleHeight = 30;
+        this.engine.userDevices.drawContainer(this.ctx);
 
-        const boxX = userDevicesArea.x - boxPadding;
-        const boxWidth = userDevicesArea.width + (2 * boxPadding) + 20; // a bit wider
-        const boxY = userDevicesArea.y - boxPadding - titleHeight;
-        const boxHeight = userDevicesArea.height + (2 * boxPadding) + titleHeight;
-
-        this.ctx.save();
-
-        // Draw the semi-transparent box
-        this.ctx.fillStyle = 'rgba(25, 177, 123, 0.1)';
-        this.ctx.strokeStyle = '#19b17b';
-        this.ctx.lineWidth = 1;
-        this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-        this.ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-
-        // Draw title for User Devices
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 14px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('User Devices', boxX + boxWidth / 2, boxY + 20);
-
-        this.ctx.restore();
-
-        this.engine.userDevices.forEach(device => {
+        this.engine.userDevices.devices.forEach(device => {
             device.draw(this.ctx);
         });
 
@@ -691,8 +588,7 @@ export class CanvasRenderer {
         // Draw all blockchains
         this.engine.blockchains.forEach((blockchain, index) => {
             // Always show blockchain labels
-            const labelColor = blockchain.name === 'Paima Engine' ? '#19b17b' : '#fff';
-            this.drawChainLabel(blockchain.yPosition, blockchain.name, 40, labelColor);
+            blockchain.drawLabel(this.ctx);
             
             // Draw all blocks if they exist
             blockchain.blocks.forEach(block => {

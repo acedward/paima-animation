@@ -5,36 +5,80 @@ export class UserDevices {
     constructor(engine) {
         this.engine = engine;
         this.devices = [];
-        this.maxDevices = 10;
-        this.lastAddTime = Date.now();
-        this.addInterval = Math.random() * randomMultipliers.userDeviceAddInterval.multiplier + randomMultipliers.userDeviceAddInterval.offset;
+        this.userDeviceCounter = 0;
+        this.deviceLifecycleInterval = 2000;
+        this.nextDeviceCheck = Date.now() + this.deviceLifecycleInterval;
+        this.maxUserDevices = 20;
+        this.minUserDevices = 5;
+
+        for (let i = 0; i < 10; i++) {
+            this.devices.push(this._createNewUserDevice());
+        }
+    }
+
+    _createNewUserDevice() {
+        const x = this.engine.canvasWidth * 0.87 + Math.random() * randomMultipliers.userDeviceCreationPosition; // Right side of the screen
+        const y = Math.random() * randomMultipliers.userDeviceCreationPosition + this.engine.canvasHeight * 0.7; // Spread vertically
+        const deviceName = `User ${this.userDeviceCounter++}`;
+        return new UserDevice(x, y, deviceName);
     }
 
     update() {
-        const now = Date.now();
-
-        // Add new devices periodically
-        if (this.devices.length < this.maxDevices && now - this.lastAddTime > this.addInterval) {
-            this.lastAddTime = now;
-            this.addInterval = Math.random() * randomMultipliers.userDeviceAddInterval.multiplier + randomMultipliers.userDeviceAddInterval.offset;
-            const x = Math.random() * this.engine.width;
-            const y = Math.random() * this.engine.height;
-            this.devices.push(new UserDevice(x, y));
+        // Handle device lifecycle
+        if (Date.now() > this.nextDeviceCheck) {
+            // Attempt to remove a device
+            if (this.devices.length > this.minUserDevices && Math.random() < randomMultipliers.deviceRemovalChance) {
+                const activeDevices = this.devices.filter(d => d.state === 'ACTIVE');
+                if (activeDevices.length > 0) {
+                    const deviceToDisappear = activeDevices[Math.floor(Math.random() * activeDevices.length)];
+                    deviceToDisappear.disappear();
+                }
+            }
+    
+            // Attempt to add a device
+            if (this.devices.length < this.maxUserDevices && Math.random() < randomMultipliers.deviceAdditionChance) {
+                this.devices.push(this._createNewUserDevice());
+            }
+    
+            this.nextDeviceCheck = Date.now() + this.deviceLifecycleInterval;
         }
 
         // Update existing devices
-        for (let i = this.devices.length - 1; i >= 0; i--) {
-            const device = this.devices[i];
-            device.update(this.engine);
-            if (!device.isActive) {
-                this.devices.splice(i, 1);
-            }
-        }
+        this.devices.forEach(device => device.update(this.engine));
+        this.devices = this.devices.filter(d => d.isActive !== false);
     }
 
-    addDevice(x, y) {
-        if (this.devices.length < this.maxDevices) {
-            this.devices.push(new UserDevice(x, y));
-        }
+    drawContainer(ctx) {
+        // Define user device area and box
+        const userDevicesArea = {
+            x: this.engine.canvasWidth * 0.87,
+            y: this.engine.canvasHeight * 0.7,
+            width: 80,
+            height: 80
+        };
+        const boxPadding = 15;
+        const titleHeight = 30;
+
+        const boxX = userDevicesArea.x - boxPadding;
+        const boxWidth = userDevicesArea.width + (2 * boxPadding) + 20; // a bit wider
+        const boxY = userDevicesArea.y - boxPadding - titleHeight;
+        const boxHeight = userDevicesArea.height + (2 * boxPadding) + titleHeight;
+
+        ctx.save();
+
+        // Draw the semi-transparent box
+        ctx.fillStyle = 'rgba(25, 177, 123, 0.1)';
+        ctx.strokeStyle = '#19b17b';
+        ctx.lineWidth = 1;
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Draw title for User Devices
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('User Devices', boxX + boxWidth / 2, boxY + 20);
+
+        ctx.restore();
     }
 }
