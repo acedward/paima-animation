@@ -203,32 +203,32 @@ export class Block {
     _drawEventIndicators(ctx) {
         const allEvents = [...this.events, ...(this.accumulatedEvents || []).flatMap(pe => pe.events || [])];
         if (allEvents.length === 0) return;
-        
+
         // Only draw if block is wide enough
         if (this.width < 30) return;
-        
-        // Draw event indicators at the same positions where particles will land
-        const dotSize = 3;
-        
-        // if (this.blockchain.name === 'Paima Engine') return;
+
+        const dotSize = 6; // Increased from 3
+        const spacing = dotSize + 2; // Spacing between dots
+        const margin = 5; // Margin from the block edges
+
+        const eventsPerRow = Math.floor((this.width - margin * 2) / spacing);
+        if (eventsPerRow <= 0) return;
+
         allEvents.forEach((event, index) => {
-            // Same positioning as particles: x=10, x=20, x=30, etc.
-            const eventX = 10 + (index * 10);
-            const eventY = 15; // 15px from top of block
-            
-            // Don't draw if it would go outside the block
-            if (eventX + 5 > this.width) return; // Leave margin at right edge
-            
+            const row = Math.floor(index / eventsPerRow);
+            const col = index % eventsPerRow;
+
+            const eventX = margin + col * spacing + dotSize / 2;
+            const eventY = this.height - margin - (row * spacing) - dotSize / 2;
+
+            // Don't draw if it would go outside the block's top edge
+            if (eventY - dotSize / 2 < margin) return;
+
             // Draw event indicator dot
             ctx.fillStyle = EventColors[event.type] || '#fff';
             ctx.beginPath();
             ctx.arc(eventX, eventY, dotSize / 2, 0, 2 * Math.PI);
             ctx.fill();
-            
-            // Draw small border around dot
-            // ctx.strokeStyle = '#000';
-            // ctx.lineWidth = 0.5;
-            // ctx.stroke();
         });
     }
 
