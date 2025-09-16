@@ -68,6 +68,7 @@ export class ScheduledEvent {
             if (this.opacity === 0) {
                 this.isActive = false;
                 this.hasFadeoutCompleted = true;
+                this.events = [];
             }
             return false;
         }

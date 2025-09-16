@@ -15,8 +15,10 @@ export class Batcher {
         this.y = y;
         this.width = 130;
         this.height = 100;
-        this.color = '#2980b9';
+        this.color = '#2c3e50';
         this.requestsReceived = 0;
+        this.ledOn = true;
+        this.ledBlinkCounter = 0;
     }
 
     receiveRequest(engine) {
@@ -43,19 +45,45 @@ export class Batcher {
     }
 
     draw(ctx) {
+        this.ledBlinkCounter++;
+        if (this.ledBlinkCounter > 30) {
+            this.ledOn = !this.ledOn;
+            this.ledBlinkCounter = 0;
+        }
+
         ctx.save();
-        ctx.fillStyle = this.color;
+        
+        const grad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+        grad.addColorStop(0, '#34495e');
+        grad.addColorStop(1, '#2c3e50');
+        
+        ctx.fillStyle = grad;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.strokeStyle = '#ffffff';
+        
+        ctx.strokeStyle = '#7f8c8d';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
 
+        for (let i = 1; i < 4; i++) {
+            const y = this.y + (i * this.height / 4);
+            ctx.beginPath();
+            ctx.moveTo(this.x, y);
+            ctx.lineTo(this.x + this.width, y);
+            ctx.strokeStyle = '#7f8c8d';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = this.ledOn ? '#2ecc71' : '#27ae60';
+        ctx.fillRect(this.x + 10, this.y + 10, 5, 5);
+        
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Batcher', this.x + this.width / 2, this.y + 20);
         ctx.font = '12px Arial';
         ctx.fillText(`Processed: ${this.requestsReceived}`, this.x + this.width / 2, this.y + 40);
+        
         ctx.restore();
     }
 

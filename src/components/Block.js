@@ -71,9 +71,6 @@ export class Block {
     }
     
     addAccumulatedEvent(event) {
-        if (event.action && event.action.hasFadeoutCompleted) {
-            event.alpha = 0;
-        }
         if (!this.accumulatedEvents.includes(event)) {
             this.accumulatedEvents.push(event);
             this.layoutAccumulatedEvents();
