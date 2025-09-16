@@ -55,6 +55,7 @@ export class ProcessedEvent {
         this.duration = this.pathDurations.reduce((a, b) => a + b, 0);
         this.isActive = true;
         this.radius = 6;
+        this.alpha = 1;
     }
 
     update() {

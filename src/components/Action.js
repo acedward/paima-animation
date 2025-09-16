@@ -43,6 +43,7 @@ export class Action {
         this.isFadingOut = false;
         this.fadeStartTime = 0;
         this.fadeDuration = 500; // ms
+        this.hasFadeoutCompleted = false;
     }
     
     startFadingOut() {
@@ -56,6 +57,7 @@ export class Action {
             this.opacity = Math.max(0, 1.0 - elapsed / this.fadeDuration);
             if (this.opacity === 0) {
                 this.isActive = false;
+                this.hasFadeoutCompleted = true;
             }
             return false;
         }

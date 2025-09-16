@@ -1177,6 +1177,7 @@ export class CanvasRenderer {
     
     drawProcessedEvent(pe) {
         this.ctx.save();
+        this.ctx.globalAlpha = pe.alpha;
         this.ctx.fillStyle = pe.color;
         this.ctx.beginPath();
         this.ctx.arc(pe.x, pe.y, pe.radius, 0, 2 * Math.PI);
