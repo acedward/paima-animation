@@ -114,4 +114,17 @@ export class BlockProcessor {
         }
         ctx.stroke();
     }
+
+    isInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    getTooltipData() {
+        return {
+            title: 'Block Processor',
+            content: 'Processes events from merged blocks, validates and transforms contents into SQL data and generates Paima L2 Blocks.',
+            data: `Status: ${this.isAnimating ? 'Animating' : 'Idle'}`
+        };
+    }
 }

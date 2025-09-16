@@ -98,4 +98,17 @@ export class UserDevice {
         ctx.fill();
         ctx.restore();
     }
+
+    isInside(x, y) {
+        const distance = Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2));
+        return distance <= this.radius;
+    }
+
+    getTooltipData() {
+        return {
+            title: `User Device: ${this.name}`,
+            content: 'Simulates a user sending requests to the batcher.',
+            data: `Status: ${this.state}`
+        };
+    }
 }

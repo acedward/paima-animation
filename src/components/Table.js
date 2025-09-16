@@ -132,4 +132,22 @@ export class Table {
             ctx.stroke();
         }
     }
+
+    isInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    getTooltipData() {
+        const lastUpdate = this.lastModified ? new Date(this.lastModified) : null;
+        
+        return {
+            title: `SQL Table: ${this.name}`,
+            content: `Rows: ${this.data.length}<br>
+                     Columns: ${this.columns.join(', ')}<br>
+                     ${this.isBlinking ? '<span style="color: #19b17b;">UPDATING</span>' : 'Idle'}`,
+            data: `Last update: ${lastUpdate ? lastUpdate.toLocaleTimeString() : 'Never'}<br>
+                   Latest data: ${this.data.length > 0 ? this.data[0].row.join(' | ') : 'None'}`
+        };
+    }
 }

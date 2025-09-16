@@ -50,4 +50,17 @@ export class Batcher {
         ctx.fillText(`Processed: ${this.requestsReceived}`, this.x + this.width / 2, this.y + 40);
         ctx.restore();
     }
+
+    isInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    getTooltipData() {
+        return {
+            title: 'Batcher',
+            content: 'Receives user requests and batches them into events for the blockchains.',
+            data: `Requests Received: ${this.requestsReceived}`
+        };
+    }
 }

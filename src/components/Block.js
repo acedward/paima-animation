@@ -231,4 +231,24 @@ export class Block {
             ctx.stroke();
         });
     }
+
+    isInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    getTooltipData(engineStartTime) {
+        const startTime = new Date(engineStartTime + this.startTime);
+        const endTime = new Date(engineStartTime + this.endTime);
+        const allEvents = [...this.events, ...(this.accumulatedEvents || []).flatMap(pe => pe.events || [])];
+        
+        return {
+            title: `${this.blockchain.name} Block #${this.index}`,
+            content: `Duration: ${(this.duration / 1000).toFixed(1)}s<br>
+                     Events: ${allEvents.length}`,
+            data: `Start: ${startTime.toLocaleTimeString()}<br>
+                   End: ${endTime.toLocaleTimeString()}<br>
+                   ${allEvents.length > 0 ? `Events: ${allEvents.map(e => e.type).join(', ')}` : ''}`
+        };
+    }
 }

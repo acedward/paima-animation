@@ -212,4 +212,27 @@ export class Action {
         
         ctx.fill();
     }
+
+    isInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    getTooltipData(engineStartTime) {
+        const scheduledTime = new Date(engineStartTime + this.scheduledTime);
+        let status = 'Scheduled';
+        if (this.isExecuted) status = 'Executed';
+        if (this.isWaitingAtNow) status = 'Waiting at NOW';
+        if (this.isTravelingToTable) status = 'Traveling to table';
+        
+        return {
+            title: `Action #${this.index}`,
+            content: `Status: ${status}<br>
+                     Events: ${this.events.length}<br>
+                     ${this.targetTable ? `Target: ${this.targetTable.name}` : ''}`,
+            data: `Scheduled: ${scheduledTime.toLocaleTimeString()}<br>
+                   Shape: ${this.currentShape} → ${this.targetShape}<br>
+                   ${this.events.length > 0 ? `Event types: ${this.events.map(e => e.type).join(', ')}` : ''}`
+        };
+    }
 }

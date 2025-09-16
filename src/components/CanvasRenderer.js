@@ -285,95 +285,42 @@ export class CanvasRenderer {
         // Check blocks
         for (let blockchain of this.engine.blockchains) {
             for (let block of blockchain.blocks) {
-                if (x >= block.x && x <= block.x + block.width && 
-                    y >= block.y && y <= block.y + block.height) {
-                    
-                    const startTime = new Date(this.engine.engineStartTime + block.startTime);
-                    const endTime = new Date(this.engine.engineStartTime + block.endTime);
-                    const allEvents = [...block.events, ...(block.accumulatedEvents || []).flatMap(pe => pe.events || [])];
-                    
-                    return {
-                        title: `${blockchain.name} Block #${block.index}`,
-                        content: `Duration: ${(block.duration / 1000).toFixed(1)}s<br>
-                                 Events: ${allEvents.length}`,
-                        data: `Start: ${startTime.toLocaleTimeString()}<br>
-                               End: ${endTime.toLocaleTimeString()}<br>
-                               ${allEvents.length > 0 ? `Events: ${allEvents.map(e => e.type).join(', ')}` : ''}`
-                    };
+                if (block.isInside(x, y)) {
+                    return block.getTooltipData(this.engine.engineStartTime);
                 }
             }
         }
         
         // Check actions
         for (let action of this.engine.actions) {
-            if (x >= action.x && x <= action.x + action.width && 
-                y >= action.y && y <= action.y + action.height) {
-                
-                const scheduledTime = new Date(this.engine.engineStartTime + action.scheduledTime);
-                let status = 'Scheduled';
-                if (action.isExecuted) status = 'Executed';
-                if (action.isWaitingAtNow) status = 'Waiting at NOW';
-                if (action.isTravelingToTable) status = 'Traveling to table';
-                
-                return {
-                    title: `Action #${action.index}`,
-                    content: `Status: ${status}<br>
-                             Events: ${action.events.length}<br>
-                             ${action.targetTable ? `Target: ${action.targetTable.name}` : ''}`,
-                    data: `Scheduled: ${scheduledTime.toLocaleTimeString()}<br>
-                           Shape: ${action.currentShape} → ${action.targetShape}<br>
-                           ${action.events.length > 0 ? `Event types: ${action.events.map(e => e.type).join(', ')}` : ''}`
-                };
+            if (action.isInside(x, y)) {
+                return action.getTooltipData(this.engine.engineStartTime);
             }
         }
         
         // Check tables
         for (let table of Object.values(this.engine.tables)) {
-            if (x >= table.x && x <= table.x + table.width && 
-                y >= table.y && y <= table.y + table.height) {
-                
-                const lastUpdate = table.lastModified ? new Date(table.lastModified) : null;
-                
-                return {
-                    title: `SQL Table: ${table.name}`,
-                    content: `Rows: ${table.data.length}<br>
-                             Columns: ${table.columns.join(', ')}<br>
-                             ${table.isBlinking ? '<span style="color: #19b17b;">UPDATING</span>' : 'Idle'}`,
-                    data: `Last update: ${lastUpdate ? lastUpdate.toLocaleTimeString() : 'Never'}<br>
-                           Latest data: ${table.data.length > 0 ? table.data[0].row.join(' | ') : 'None'}`
-                };
+            if (table.isInside(x, y)) {
+                return table.getTooltipData();
             }
         }
         
         // Check Block Processor
         const bp = this.engine.blockProcessor;
-        if (bp && x >= bp.x && x <= bp.x + bp.width && y >= bp.y && y <= bp.y + bp.height) {
-            return {
-                title: 'Block Processor',
-                content: 'Processes events from merged blocks, validates and transforms contents into SQL data and generates Paima L2 Blocks.',
-                data: `Status: ${bp.isAnimating ? 'Animating' : 'Idle'}`
-            };
+        if (bp && bp.isInside(x, y)) {
+            return bp.getTooltipData();
         }
 
         // Check Batcher
         const batcher = this.engine.batcher;
-        if (batcher && x >= batcher.x && x <= batcher.x + batcher.width && y >= batcher.y && y <= batcher.y + batcher.height) {
-            return {
-                title: 'Batcher',
-                content: 'Receives user requests and batches them into events for the blockchains.',
-                data: `Requests Received: ${batcher.requestsReceived}`
-            };
+        if (batcher && batcher.isInside(x, y)) {
+            return batcher.getTooltipData();
         }
 
         // Check User Devices
         for (let device of this.engine.userDevices) {
-            const distance = Math.sqrt(Math.pow(x - device.x, 2) + Math.pow(y - device.y, 2));
-            if (distance <= device.radius) {
-                return {
-                    title: `User Device: ${device.name}`,
-                    content: 'Simulates a user sending requests to the batcher.',
-                    data: `Status: ${device.state}`
-                };
+            if (device.isInside(x, y)) {
+                return device.getTooltipData();
             }
         }
 
