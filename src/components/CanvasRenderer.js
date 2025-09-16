@@ -1186,7 +1186,8 @@ export class CanvasRenderer {
     }
 
     drawEventLegend() {
-        const legendX = this.canvas.width - 150; // Position near right edge
+        const width = 130;
+        const legendX = this.canvas.width - 165 // Position near right edge
         const legendY = this.canvas.height - 120; // Position near bottom
         const dotSize = 4;
         const lineHeight = 16;
@@ -1201,12 +1202,12 @@ export class CanvasRenderer {
         
         // Draw legend background
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(legendX - 10, legendY - 15, 140, 90);
+        this.ctx.fillRect(legendX - 10, legendY - 15, width, 90);
         
         // Draw legend border
         this.ctx.strokeStyle = '#333';
         this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(legendX - 10, legendY - 15, 140, 90);
+        this.ctx.strokeRect(legendX - 10, legendY - 15, width, 90);
         
         // Draw legend title
         this.ctx.fillStyle = '#ccc';

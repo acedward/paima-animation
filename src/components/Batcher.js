@@ -5,7 +5,7 @@ export class Batcher {
     constructor(x, y) {
         this.x = x - 50;
         this.y = y;
-        this.width = 120;
+        this.width = 130;
         this.height = 100;
         this.color = '#2980b9';
         this.requestsReceived = 0;
