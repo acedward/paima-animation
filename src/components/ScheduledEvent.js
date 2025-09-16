@@ -68,7 +68,13 @@ export class ScheduledEvent {
             if (this.opacity === 0) {
                 this.isActive = false;
                 this.hasFadeoutCompleted = true;
-                this.events = [];
+        
+                // There is a where events are still visible after the action has faded out
+                setTimeout(() => {
+                    this.events.forEach(event => {
+                        event.opacity = 0;
+                    });  
+                }, 500);
             }
             return false;
         }

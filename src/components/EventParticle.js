@@ -74,12 +74,6 @@ export class EventParticle {
             // Particle has reached destination, follow the block
             this.currentX = currentEndX;
             this.currentY = currentEndY;
-            
-            if (!this.isFadingOut) {
-                // Pulse effect
-                const pulseTime = Date.now() * 0.003;
-                this.opacity = 0.8 + 0.2 * Math.sin(pulseTime);
-            }
         }
     }
     
