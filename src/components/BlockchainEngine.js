@@ -10,6 +10,7 @@ import { ProcessedEvent } from './ProcessedEvent.js';
 import { UserDevice } from './UserDevice.js';
 import { randomMultipliers } from '../random.js';
 import { UserRequestParticle } from './UserRequestParticle.js';
+import { Table } from './Table.js';
 
 export class BlockchainEngine {
     _createNewUserDevice() {
@@ -81,54 +82,30 @@ export class BlockchainEngine {
     
     initializeTables() {
         this.tables = {
-            erc20_balance: {
-                name: 'ERC20 Balance',
-                columns: ['Address', 'Balance'],
-                data: [], // Start empty
-                x: 50,
-                y: 60,
-                width: tableConfig.width,
-                height: tableConfig.height,
-                isBlinking: false,
-                blinkStartTime: 0,
-                lastModified: 0
-            },
-            erc721_ownership: {
-                name: 'ERC721 Ownership',
-                columns: ['Asset ID', 'Owner'],
-                data: [], // Start empty
-                x: 50 + tableConfig.width + tableConfig.spacing,
-                y: 60,
-                width: tableConfig.width,
-                height: tableConfig.height,
-                isBlinking: false,
-                blinkStartTime: 0,
-                lastModified: 0
-            },
-            current_position: {
-                name: 'Current Position',
-                columns: ['User ID', 'X', 'Y', 'Char ID'],
-                data: [], // Start empty
-                x: 50 + (tableConfig.width + tableConfig.spacing) * 2,
-                y: 60,
-                width: tableConfig.width,
-                height: tableConfig.height,
-                isBlinking: false,
-                blinkStartTime: 0,
-                lastModified: 0
-            },
-            accounts_to_address: {
-                name: 'Accounts to Address',
-                columns: ['User ID', 'Address'],
-                data: [], // Start empty
-                x: 50 + (tableConfig.width + tableConfig.spacing) * 3,
-                y: 60,
-                width: tableConfig.width,
-                height: tableConfig.height,
-                isBlinking: false,
-                blinkStartTime: 0,
-                lastModified: 0
-            }
+            erc20_balance: new Table(
+                'ERC20 Balance',
+                ['Address', 'Balance'],
+                50,
+                60
+            ),
+            erc721_ownership: new Table(
+                'ERC721 Ownership',
+                ['Asset ID', 'Owner'],
+                50 + tableConfig.width + tableConfig.spacing,
+                60
+            ),
+            current_position: new Table(
+                'Current Position',
+                ['User ID', 'X', 'Y', 'Char ID'],
+                50 + (tableConfig.width + tableConfig.spacing) * 2,
+                60
+            ),
+            accounts_to_address: new Table(
+                'Accounts to Address',
+                ['User ID', 'Address'],
+                50 + (tableConfig.width + tableConfig.spacing) * 3,
+                60
+            )
         };
     }
     
@@ -235,59 +212,27 @@ export class BlockchainEngine {
     
     updateERC20Balance(address, amount, timestamp) {
         const table = this.tables.erc20_balance;
-        const newRow = {row: [address, amount], timestamp: timestamp};
-        table.data.push(newRow);
-        this.maintainTableSize(table);
-        this.triggerTableBlink(table, timestamp);
+        table.updateData([address, amount], timestamp);
     }
     
     updateERC721Ownership(tokenId, owner, timestamp) {
         const table = this.tables.erc721_ownership;
-        const newRow = {row: [tokenId.toString(), owner], timestamp: timestamp};
-        table.data.push(newRow);
-        this.maintainTableSize(table);
-        this.triggerTableBlink(table, timestamp);
+        table.updateData([tokenId.toString(), owner], timestamp);
     }
     
     updateCurrentPosition(userId, x, y, characterId, timestamp) {
         const table = this.tables.current_position;
-        const newRow = {row: [userId.toString(), x.toString(), y.toString(), characterId.toString()], timestamp: timestamp};
-        table.data.push(newRow);
-        this.maintainTableSize(table);
-        this.triggerTableBlink(table, timestamp);
+        table.updateData([userId.toString(), x.toString(), y.toString(), characterId.toString()], timestamp);
     }
     
     updateAccountsToAddress(userId, address, timestamp) {
         const table = this.tables.accounts_to_address;
-        const newRow = {row: [userId.toString(), address], timestamp: timestamp};
-        table.data.push(newRow);
-        this.maintainTableSize(table);
-        this.triggerTableBlink(table, timestamp);
+        table.updateData([userId.toString(), address], timestamp);
     }
     
-    maintainTableSize(table) {
-        // Sort by timestamp descending (newest first)
-        table.data.sort((a, b) => b.timestamp - a.timestamp);
-        
-        // Keep only max rows
-        if (table.data.length > tableConfig.maxRows) {
-            table.data = table.data.slice(0, tableConfig.maxRows);
-        }
-    }
-    
-    triggerTableBlink(table, timestamp) {
-        table.isBlinking = true;
-        table.blinkStartTime = Date.now();
-        table.lastModified = timestamp;
-    }
-    
-    updateTableBlinking() {
-        const currentTime = Date.now();
-        
+    updateTables() {
         Object.values(this.tables).forEach(table => {
-            if (table.isBlinking && (currentTime - table.blinkStartTime) > tableConfig.blinkDuration) {
-                table.isBlinking = false;
-            }
+            table.update();
         });
     }
     
@@ -428,7 +373,7 @@ export class BlockchainEngine {
         const currentEngineTime = this.getCurrentTime();
         
         // Update table blinking
-        this.updateTableBlinking();
+        this.updateTables();
 
         if (this.blockProcessor.isAnimating && Math.random() < randomMultipliers.blockProcessorToBatcherChance) {
             this.blockProcessorSendsEventToBatcher();

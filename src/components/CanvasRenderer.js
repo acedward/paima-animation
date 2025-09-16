@@ -608,97 +608,6 @@ export class CanvasRenderer {
     }
     
     // All the existing drawing methods remain the same...
-    drawTable(table) {
-        const config = tableConfig;
-        
-        // Draw table background with subtle blinking effect
-        if (table.isBlinking) {
-            // Subtle oscillating opacity for blink effect
-            const blinkProgress = (Date.now() - table.blinkStartTime) / config.blinkDuration;
-            const blinkOpacity = 0.15 + 0.1 * Math.abs(Math.sin(blinkProgress * Math.PI * 3)); // Reduced intensity and frequency
-            this.ctx.fillStyle = `rgba(25, 177, 123, ${blinkOpacity})`;
-        } else {
-            this.ctx.fillStyle = '#1a1a1a';
-        }
-        this.ctx.fillRect(table.x, table.y, config.width, config.height);
-        
-        // Draw table border (slightly brighter when blinking)
-        if (table.isBlinking) {
-            this.ctx.strokeStyle = '#1fb57d'; // Subtle green instead of bright
-            this.ctx.lineWidth = 2.5;
-        } else {
-            this.ctx.strokeStyle = '#19b17b';
-            this.ctx.lineWidth = 2;
-        }
-        this.ctx.strokeRect(table.x, table.y, config.width, config.height);
-        
-        // Draw table header
-        this.ctx.fillStyle = '#19b17b';
-        this.ctx.fillRect(table.x, table.y, config.width, config.headerHeight);
-        
-        // Draw table title
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = 'bold 12px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(table.name, table.x + config.width / 2, table.y + config.headerHeight / 2 + 4);
-        
-        // Draw column headers
-        const columnWidth = config.width / table.columns.length;
-        this.ctx.fillStyle = '#ccc';
-        this.ctx.font = '10px Arial';
-        
-        table.columns.forEach((column, index) => {
-            const columnX = table.x + index * columnWidth;
-            const columnCenterX = columnX + columnWidth / 2;
-            this.ctx.fillText(column, columnCenterX, table.y + config.headerHeight + 15);
-        });
-        
-        // Draw separator line after headers
-        this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 1;
-        this.ctx.beginPath();
-        this.ctx.moveTo(table.x, table.y + config.headerHeight + 20);
-        this.ctx.lineTo(table.x + config.width, table.y + config.headerHeight + 20);
-        this.ctx.stroke();
-        
-        // Draw table data (already sorted by timestamp in engine)
-        table.data.forEach((rowData, rowIndex) => {
-            const row = rowData.row;
-            const rowY = table.y + config.headerHeight + 35 + (rowIndex * config.rowHeight);
-            
-            // Alternate row background - inset by 1px to stay inside border
-            if (rowIndex % 2 === 1) {
-                this.ctx.fillStyle = '#2a2a2a';
-                this.ctx.fillRect(table.x + 1, rowY - 10, config.width - 2, config.rowHeight);
-            }
-            
-            // Highlight newest row (index 0) with subtle glow - inset by 1px to stay inside border
-            if (rowIndex === 0) {
-                this.ctx.fillStyle = 'rgba(25, 177, 123, 0.08)'; // More subtle
-                this.ctx.fillRect(table.x + 1, rowY - 10, config.width - 2, config.rowHeight);
-            }
-            
-            // Draw row data
-            this.ctx.fillStyle = rowIndex === 0 ? '#1fb57d' : '#fff'; // Subtle green for newest
-            this.ctx.font = '9px Arial';
-            row.forEach((cell, cellIndex) => {
-                const cellX = table.x + cellIndex * columnWidth;
-                const cellCenterX = cellX + columnWidth / 2;
-                this.ctx.fillText(cell, cellCenterX, rowY);
-            });
-        });
-        
-        // Draw column separator lines
-        this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 1;
-        for (let i = 1; i < table.columns.length; i++) {
-            const lineX = table.x + i * columnWidth;
-            this.ctx.beginPath();
-            this.ctx.moveTo(lineX, table.y + config.headerHeight);
-            this.ctx.lineTo(lineX, table.y + config.height);
-            this.ctx.stroke();
-        }
-    }
     
     drawEventIndicators(block) {
         const allEvents = [...block.events, ...(block.accumulatedEvents || []).flatMap(pe => pe.events || [])];
@@ -1046,7 +955,7 @@ export class CanvasRenderer {
         
         // Draw SQL tables
         Object.values(this.engine.tables).forEach(table => {
-            this.drawTable(table);
+            table.draw(this.ctx);
         });
         
         // Draw Block Processor
