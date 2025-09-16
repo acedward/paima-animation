@@ -13,9 +13,12 @@ import { randomMultipliers } from '../random.js';
 import { UserRequestParticle } from './UserRequestParticle.js';
 import { Table } from './Table.js';
 import { BlockProcessor } from './BlockProcessor.js';
-import { EventTypes, processEvent } from './EventTypes.js';
+import { EventTypes } from './EventTypes.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
 import { ScheduledEvents } from './ScheduledEvents.js';
+import { Chain } from './Chain.js';
+import { ChainManager } from './ChainManager.js';
+import { TableManager } from './TableManager.js';
 
 /**
  * @class BlockchainEngine
@@ -49,50 +52,54 @@ export class BlockchainEngine {
         this.blockProcessor = new BlockProcessor(this.canvasWidth * 0.805);
         this.scheduledEvents = new ScheduledEvents(this.canvasWidth * 0.810, this.canvasHeight * 0.23);
         
+        this.chainManager = new ChainManager(this);
+        this.tableManager = new TableManager(this);
+
         // Time tracking - starts at 0 when engine initializes
         this.engineStartTime = Date.now();
         
-        // Initialize SQL tables
-        this.initializeTables();
         this.initializeBatcherAndDevices();
         
         // Blockchain configuration with consistent spacing - moved down to make room for tables and actions
         // const chainStartY = 310; // Moved down to make room for actions row
         // const chainSpacing = 100; // Decreased from 120 to 100 for better fit
         
-        this.blockchains = [
-        ];
+        // this.blockchains = [
+        // ];
     }
     
-    initializeTables() {
-        this.tables = {
-            erc20_balance: new Table(
-                'ERC20 Balance',
-                ['Address', 'Balance'],
-                50,
-                60
-            ),
-            erc721_ownership: new Table(
-                'ERC721 Ownership',
-                ['Asset ID', 'Owner'],
-                50 + tableConfig.width + tableConfig.spacing,
-                60
-            ),
-            current_position: new Table(
-                'Current Position',
-                ['User ID', 'X', 'Y', 'Char ID'],
-                50 + (tableConfig.width + tableConfig.spacing) * 2,
-                60
-            ),
-            accounts_to_address: new Table(
-                'Accounts to Address',
-                ['User ID', 'Address'],
-                50 + (tableConfig.width + tableConfig.spacing) * 3,
-                60
-            )
-        };
+    get blockchains() {
+        return this.chainManager.blockchains;
+    }
+
+    get tables() {
+        return this.tableManager.tables;
+    }
+
+    scheduleChainAdditions() {
+        this.chainManager.scheduleChainAdditions();
+    }
+
+    addChainProgrammatically(name, blockTimeSeconds) {
+        this.chainManager.addChainProgrammatically(name, blockTimeSeconds);
+    }
+
+    addChain(name, blockTimeSeconds) {
+        this.chainManager.addChain(name, blockTimeSeconds);
     }
     
+    addXAIChain() {
+        this.chainManager.addXAIChain();
+    }
+    
+    removeChain(chainId) {
+        this.chainManager.removeChain(chainId);
+    }
+
+    clearAllChains() {
+        this.chainManager.clearAllChains();
+    }
+
     initializeBatcherAndDevices() {
         this.batcher = new Batcher(this.canvasWidth * 0.9, this.canvasHeight / 2);
     }
@@ -114,50 +121,12 @@ export class BlockchainEngine {
         return Date.now() - this.engineStartTime;
     }
     
-    // Process events from an action when it reaches a table
     processActionEvents(action) {
-        const currentTime = Date.now();
-        
-        action.events.forEach(event => {
-            processEvent(event, this.tables, currentTime);
-        });
+        this.tableManager.processActionEvents(action);
     }
     
-    // Select the appropriate table for an action based on its events
     selectAppropriateTable(action) {
-        if (action.events.length === 0) {
-            // Fallback to random table if no events
-            const tableNames = Object.keys(this.tables);
-            const randomTableName = tableNames[Math.floor(Math.random() * tableNames.length)];
-            return this.tables[randomTableName];
-        }
-        
-        // Priority mapping for event types to tables
-        const eventToTable = {
-            [EventTypes.ERC20_TRANSFER]: 'erc20_balance',
-            [EventTypes.ERC721_TRANSFER]: 'erc721_ownership',
-            [EventTypes.GAME_MOVE]: 'current_position',
-            [EventTypes.ACCOUNT_CREATED]: 'accounts_to_address'
-        };
-        
-        // Find the first event type that maps to a table
-        for (const event of action.events) {
-            const tableName = eventToTable[event.type];
-            if (tableName && this.tables[tableName]) {
-                return this.tables[tableName];
-            }
-        }
-        
-        // Fallback to random table if no mapping found
-        const tableNames = Object.keys(this.tables);
-        const randomTableName = tableNames[Math.floor(Math.random() * tableNames.length)];
-        return this.tables[randomTableName];
-    }
-    
-    updateTables() {
-        Object.values(this.tables).forEach(table => {
-            table.update();
-        });
+        return this.tableManager.selectAppropriateTable(action);
     }
     
     createBlock(blockchain) {
@@ -253,8 +222,7 @@ export class BlockchainEngine {
         
         const currentEngineTime = this.getCurrentTime();
         
-        // Update table blinking
-        this.updateTables();
+        this.tableManager.update();
 
         if (this.blockProcessor.isAnimating && Math.random() < randomMultipliers.blockProcessorToBatcherChance) {
             this.blockProcessorSendsEventToBatcher();
@@ -357,30 +325,7 @@ export class BlockchainEngine {
         const pixelsPerSecond = 80;
         
         // Handle different blockchain timings - each operates independently
-        this.blockchains.forEach((blockchain, index) => {
-            // Initialize timing if this is the first time
-            if (blockchain.lastBlockTime === 0) {
-                blockchain.lastBlockTime = currentTime;
-                blockchain.lastBlockEndTime = currentEngineTime; // First block starts at current engine time
-            }
-            
-            // Handle different timing types
-            if (blockchain.timing.type === 'fixed') {
-                const timeSinceLastBlock = currentTime - blockchain.lastBlockTime;
-                
-                if (timeSinceLastBlock >= blockchain.timing.interval) {
-                    this.createBlock(blockchain, blockchain.timing.interval);
-                    blockchain.lastBlockTime = currentTime;
-                    
-                    // Special case: increment blockCount for the first blockchain
-                    if (index === 0 && this.blockCount < 6) {
-                        this.blockCount++;
-                    }
-                }
-            } else if (blockchain.timing.type === 'probability') {
-                this.checkProbabilityBlockGeneration(blockchain, currentTime);
-            }
-        });
+        this.chainManager.update(currentTime, currentEngineTime);
         
         // Position all blocks based on their timestamp relative to current time
         this.blockchains.forEach(blockchain => {

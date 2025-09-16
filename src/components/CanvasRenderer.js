@@ -29,10 +29,6 @@ export class CanvasRenderer {
         // Initialize the blockchain engine with only Paima Engine
         this.engine = new BlockchainEngine(this.canvas.width);
         
-        // Start with only Paima Engine
-        const paimaChain = new PaimaEngineChain(this.chainStartY, 0);
-        this.engine.blockchains = [paimaChain];
-        
         // Initialize UI handlers
         this.initializeUI();
         this.initializeTooltips();
@@ -41,55 +37,11 @@ export class CanvasRenderer {
         this.initializeConfigModal();
         
         // Schedule automatic chain additions
-        this.scheduleChainAdditions();
+        this.engine.scheduleChainAdditions();
     }
     
-    scheduleChainAdditions() {
-        // After 4 seconds, add Arbitrum
-        setTimeout(() => {
-            this.addChainProgrammatically('Arbitrum', 0.25);
-            console.log('Added Arbitrum blockchain');
-        }, 3500);
-        
-        // After 8 seconds, add Ethereum
-        setTimeout(() => {
-            this.addChainProgrammatically('Ethereum', 12);
-            console.log('Added Ethereum blockchain');
-        }, 7600);
-        
-        // After 12 seconds, add Cardano, Midnight
-        setTimeout(() => {  
-            this.addChainProgrammatically('Cardano', 20);
-            this.addChainProgrammatically('Midnight', 6);
-            console.log('Added Cardano, Midnight blockchains');
-        }, 9400);
-
-        setTimeout(() => {
-            this.addChainProgrammatically('Avail', 20);
-            console.log('Added Avail blockchain');
-        }, 11500);
-    }
-    
-    chainSpacing = 80;
-    chainStartY = 400;
     addChainProgrammatically(name, blockTimeSeconds) {
-        // Don't add if chain already exists
-        const existingChain = this.engine.blockchains.find(chain => 
-            chain.name.toLowerCase() === name.toLowerCase()
-        );
-        if (existingChain) {
-            return;
-        }
-        
-        // const chainSpacing = this.chainSpacing;
-        // const chainStartY = this.chainStartY;
-        const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
-        
-        const timing = { type: 'fixed', interval: blockTimeSeconds * 1000 };
-        const lastBlockEndTime = this.engine.getCurrentTime();
-        const newChain = new Chain(name, newYPosition, timing, lastBlockEndTime);
-        
-        this.engine.blockchains.push(newChain);
+        this.engine.addChainProgrammatically(name, blockTimeSeconds);
         this.updateChainList();
         this.updatePresetButtons();
     }
@@ -374,14 +326,7 @@ export class CanvasRenderer {
     }
     
     clearAllChains() {
-        // Keep only Paima Engine
-        this.engine.blockchains = this.engine.blockchains.filter(chain => 
-            chain.id === 'paima-engine'
-        );
-        
-        // Reset position
-        this.engine.blockchains[0].yPosition = this.chainStartY;
-        
+        this.engine.clearAllChains();
         this.updateChainList();
         this.updatePresetButtons();
     }
@@ -429,53 +374,19 @@ export class CanvasRenderer {
     }
     
     addChain(name, blockTimeSeconds) {
-        // const chainSpacing = 120;
-        // const chainStartY = 310;
-        const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
-        
-        const timing = { type: 'fixed', interval: blockTimeSeconds * 1000 };
-        const lastBlockEndTime = this.engine.getCurrentTime();
-        const newChain = new Chain(name, newYPosition, timing, lastBlockEndTime);
-        
-        this.engine.blockchains.push(newChain);
+        this.engine.addChain(name, blockTimeSeconds);
         this.updateChainList();
         this.updatePresetButtons();
     }
     
     addXAIChain() {
-        // const chainSpacing = 120;
-        // const chainStartY = 310;
-        const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
-        
-        const timing = { 
-            type: 'probability', 
-            possibleIntervals: [100, 150, 200, 250, 300], // milliseconds
-            currentCheckIndex: 0
-        };
-        const lastBlockEndTime = this.engine.getCurrentTime();
-        const newChain = new Chain('XAI', newYPosition, timing, lastBlockEndTime);
-        
-        this.engine.blockchains.push(newChain);
+        this.engine.addXAIChain();
         this.updateChainList();
         this.updatePresetButtons();
     }
     
     removeChain(chainId) {
-        if (chainId === 'paima-engine') {
-            return; // Can't remove Paima Engine
-        }
-        
-        // Remove from engine
-        this.engine.blockchains = this.engine.blockchains.filter(chain => chain.id !== chainId);
-        
-        // Recalculate Y positions for remaining chains
-        // const chainSpacing = 120;
-        // const chainStartY = 310;
-        
-        this.engine.blockchains.forEach((chain, index) => {
-            chain.yPosition = this.chainStartY + (index * this.chainSpacing);
-        });
-        
+        this.engine.removeChain(chainId);
         this.updateChainList();
         this.updatePresetButtons();
     }
