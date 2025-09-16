@@ -3,6 +3,7 @@ import { Block } from './Block.js';
 export class ProcessedEvent {
     constructor(action, target, engine) {
         this.engine = engine;
+        this.action = action;
         this.x = action.x;
         this.y = action.y;
         this.target = target;
@@ -84,6 +85,7 @@ export class ProcessedEvent {
             if (this.currentPathSegment >= this.pathDurations.length) {
                 this.hasReached = true;
                 if (!(this.target instanceof Block)) {
+                    this.engine.processActionEvents(this.action);
                     this.isActive = false;
                 }
             }

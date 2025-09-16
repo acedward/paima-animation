@@ -1,9 +1,10 @@
 export class UserRequestParticle {
-    constructor(startX, startY, endX, endY, duration = 1500) {
+    constructor(startX, startY, endX, endY, target, duration = 1500) {
         this.startX = startX;
         this.startY = startY;
         this.endX = endX;
         this.endY = endY;
+        this.target = target;
         this.currentX = startX;
         this.currentY = startY;
         this.duration = duration;

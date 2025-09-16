@@ -2,6 +2,7 @@ import { tableConfig, blockHeight, mergeColors, actionConfig } from '../config.j
 import { generateBlockchainEvent } from '../utils/helpers.js';
 import { Action } from './Action.js';
 import { Batcher } from './Batcher.js';
+import { BatcherParticle } from './BatcherParticle.js';
 import { Block } from './Block.js';
 import { BlockProcessorParticle } from './BlockProcessorParticle.js';
 import { EventParticle } from './EventParticle.js';
@@ -375,17 +376,6 @@ export class BlockchainEngine {
             particle.isActive = false; // Deactivate the particle
         });
 
-        // Add blockchain events to non-Paima blocks (70% chance)
-        const time = block.endTime - block.startTime;
-        // if time is more than 1000ms, then generate an event
-        // if time is less than generate an event with time/1000 chance
-        if (blockchain.name !== 'Paima Engine' && (time > 1000 || Math.random() < time/1000)) {
-            const event = generateBlockchainEvent(blockchain.name);
-            if (event) {
-                block.events.push(event);
-            }
-        }
-        
         blockchain.blocks.push(block);
         
         // Update the blockchain's last block end time
@@ -499,7 +489,7 @@ export class BlockchainEngine {
         // Update table blinking
         this.updateTableBlinking();
 
-        if (Math.random() < randomMultipliers.blockProcessorToBatcherChance) {
+        if (this.blockProcessor.isAnimating && Math.random() < randomMultipliers.blockProcessorToBatcherChance) {
             this.blockProcessorSendsEventToBatcher();
         }
         
@@ -532,7 +522,26 @@ export class BlockchainEngine {
         this.userRequestParticles.forEach(particle => {
             particle.update();
             if (particle.hasReached) {
-                this.batcher.receiveRequest(this);
+                if (particle.target === this.batcher) {
+                    this.batcher.receiveRequest(this);
+                } else if (particle.target && typeof particle.target.yPosition !== 'undefined') { // It's a blockchain
+                    const event = generateBlockchainEvent(particle.target.name);
+                    if (event) {
+                        const newParticle = new BatcherParticle(
+                            particle.currentX,
+                            particle.currentY,
+                            particle.target, // the chain
+                            event,
+                            this
+                        );
+                        newParticle.state = 'WAITING'; // It's already at the waiting position, so it can be picked up by next block
+                        const nowPosition = this.blockProcessor.nowPosition;
+                        const waitPositionX = nowPosition + 100;
+                        newParticle.currentX = waitPositionX;
+                        newParticle.currentY = particle.target.yPosition + blockHeight / 2;
+                        this.batcherParticles.push(newParticle);
+                    }
+                }
             }
         });
 
@@ -560,11 +569,7 @@ export class BlockchainEngine {
         this.actions.forEach(action => {
             const actionResult = action.update(currentEngineTime);
             if (actionResult) {
-                if (typeof actionResult === 'object' && actionResult.completed) {
-                    // Action reached table, process its events to update the table
-                    this.processActionEvents(action);
-                    this.triggerTableBlink(actionResult.targetTable, Date.now());
-                } else if (typeof actionResult === 'object' && actionResult.readyToTravel) {
+                if (typeof actionResult === 'object' && actionResult.readyToTravel) {
                     // Action finished waiting at NOW, start travel to appropriate table
                     const targetTable = this.selectAppropriateTable(action);
                     // action.startTravelToTable(targetTable);
@@ -583,12 +588,7 @@ export class BlockchainEngine {
                         this.processedEvents.push(eventToPaima);
                     }
                     
-                    // Process the action events immediately for table update, but visually it travels.
-                    this.processActionEvents(action);
-                    this.triggerTableBlink(targetTable, Date.now());
-
-
-                    action.isActive = false; // Deactivate original action
+                    action.startFadingOut();
                 }
             }
         });

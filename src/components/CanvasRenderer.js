@@ -1099,6 +1099,12 @@ export class CanvasRenderer {
         // Draw NOW line
         this.drawNowLine();
         
+        // Draw title for Scheduled Events
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = 'bold 16px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillText('Scheduled Events', 20, 255);
+        
         // Draw all actions
         this.engine.actions.forEach(action => {
             this.drawAction(action);

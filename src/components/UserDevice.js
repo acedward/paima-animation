@@ -1,5 +1,6 @@
 import { UserRequestParticle } from './UserRequestParticle.js';
 import { randomMultipliers } from '../random.js';
+import { blockHeight } from '../config.js';
 
 export class UserDevice {
     constructor(x, y, name = 'User') {
@@ -40,12 +41,41 @@ export class UserDevice {
             this.lastRequestTime = now;
             this.requestInterval = Math.random() * randomMultipliers.userDeviceRequestInterval.multiplier + randomMultipliers.userDeviceRequestInterval.offset;
             
-            if (engine.batcher) {
+            const useBatcher = Math.random() < 0.5;
+
+            if (useBatcher && engine.batcher) {
                 const particle = new UserRequestParticle(
                     this.x,
                     this.y,
                     engine.batcher.x + engine.batcher.width / 2,
-                    engine.batcher.y + engine.batcher.height / 2
+                    engine.batcher.y + engine.batcher.height / 2,
+                    engine.batcher
+                );
+                engine.userRequestParticles.push(particle);
+            } else if (engine.blockchains && engine.blockchains.length > 0) {
+                const targetableChains = engine.blockchains.filter(bc => bc.name !== 'Paima Engine');
+                if (targetableChains.length > 0) {
+                    const randomChain = targetableChains[Math.floor(Math.random() * targetableChains.length)];
+                    const nowPosition = engine.blockProcessor.nowPosition;
+                    const targetX = nowPosition + 100;
+                    const targetY = randomChain.yPosition + blockHeight / 2;
+                    
+                    const particle = new UserRequestParticle(
+                        this.x,
+                        this.y,
+                        targetX,
+                        targetY,
+                        randomChain
+                    );
+                    engine.userRequestParticles.push(particle);
+                }
+            } else if (engine.batcher) { // Fallback to batcher if no blockchains
+                const particle = new UserRequestParticle(
+                    this.x,
+                    this.y,
+                    engine.batcher.x + engine.batcher.width / 2,
+                    engine.batcher.y + engine.batcher.height / 2,
+                    engine.batcher
                 );
                 engine.userRequestParticles.push(particle);
             }

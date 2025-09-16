@@ -35,9 +35,28 @@ export class Action {
         this.isWaitingAtNow = false;
         this.waitStartTime = 0;
         this.waitDuration = 0; // 1 second wait at NOW line
+        
+        // Fading out state
+        this.isFadingOut = false;
+        this.fadeStartTime = 0;
+        this.fadeDuration = 500; // ms
+    }
+    
+    startFadingOut() {
+        this.isFadingOut = true;
+        this.fadeStartTime = Date.now();
     }
     
     update(currentTime) {
+        if (this.isFadingOut) {
+            const elapsed = Date.now() - this.fadeStartTime;
+            this.opacity = Math.max(0, 1.0 - elapsed / this.fadeDuration);
+            if (this.opacity === 0) {
+                this.isActive = false;
+            }
+            return false;
+        }
+        
         if (this.isWaitingAtNow) {
             // Handle waiting at NOW line
             const elapsed = Date.now() - this.waitStartTime;
