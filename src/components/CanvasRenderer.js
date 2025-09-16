@@ -3,6 +3,8 @@ import { tableConfig } from '../config.js';
 import { Block } from './Block.js';
 import { randomMultipliers } from '../random.js';
 import { EventLegend } from './EventLegend.js';
+import { Chain } from './Chain.js';
+import { PaimaEngineChain } from './PaimaEngineChain.js';
 // Enhanced UI Controller with dynamic chain management and tooltips
 export class CanvasRenderer {
     constructor(canvasId) {
@@ -18,19 +20,8 @@ export class CanvasRenderer {
         this.engine = new BlockchainEngine(this.canvas.width);
         
         // Start with only Paima Engine
-        this.engine.blockchains = [
-            {
-                name: 'Paima Engine',
-                color: () => '#19b17b',
-                yPosition: this.chainStartY,
-                timing: { type: 'fixed', interval: 1000 },
-                counter: 0,
-                blocks: [],
-                lastBlockTime: 0,
-                lastBlockEndTime: 0,
-                id: 'paima-engine' // Add ID for management
-            }
-        ];
+        const paimaChain = new PaimaEngineChain(this.chainStartY, 0);
+        this.engine.blockchains = [paimaChain];
         
         // Initialize UI handlers
         this.initializeUI();
@@ -84,17 +75,9 @@ export class CanvasRenderer {
         // const chainStartY = this.chainStartY;
         const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
         
-        const newChain = {
-            name: name,
-            color: () => '#7f8c8d',
-            yPosition: newYPosition,
-            timing: { type: 'fixed', interval: blockTimeSeconds * 1000 }, // Convert to milliseconds
-            counter: 0,
-            blocks: [],
-            lastBlockTime: 0,
-            lastBlockEndTime: this.engine.getCurrentTime(), // Start at current engine time to avoid huge first block
-            id: `chain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID
-        };
+        const timing = { type: 'fixed', interval: blockTimeSeconds * 1000 };
+        const lastBlockEndTime = this.engine.getCurrentTime();
+        const newChain = new Chain(name, newYPosition, timing, lastBlockEndTime);
         
         this.engine.blockchains.push(newChain);
         this.updateChainList();
@@ -488,17 +471,9 @@ export class CanvasRenderer {
         // const chainStartY = 310;
         const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
         
-        const newChain = {
-            name: name,
-            color: () => '#7f8c8d',
-            yPosition: newYPosition,
-            timing: { type: 'fixed', interval: blockTimeSeconds * 1000 }, // Convert to milliseconds
-            counter: 0,
-            blocks: [],
-            lastBlockTime: 0,
-            lastBlockEndTime: this.engine.getCurrentTime(), // Start at current engine time to avoid huge first block
-            id: `chain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID
-        };
+        const timing = { type: 'fixed', interval: blockTimeSeconds * 1000 };
+        const lastBlockEndTime = this.engine.getCurrentTime();
+        const newChain = new Chain(name, newYPosition, timing, lastBlockEndTime);
         
         this.engine.blockchains.push(newChain);
         this.updateChainList();
@@ -510,21 +485,13 @@ export class CanvasRenderer {
         // const chainStartY = 310;
         const newYPosition = this.chainStartY + (this.engine.blockchains.length * this.chainSpacing);
         
-        const newChain = {
-            name: 'XAI',
-            color: () => '#7f8c8d',
-            yPosition: newYPosition,
-            timing: { 
-                type: 'probability', 
-                possibleIntervals: [100, 150, 200, 250, 300], // milliseconds
-                currentCheckIndex: 0
-            },
-            counter: 0,
-            blocks: [],
-            lastBlockTime: 0,
-            lastBlockEndTime: this.engine.getCurrentTime(), // Start at current engine time to avoid huge first block
-            id: `xai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Unique ID
+        const timing = { 
+            type: 'probability', 
+            possibleIntervals: [100, 150, 200, 250, 300], // milliseconds
+            currentCheckIndex: 0
         };
+        const lastBlockEndTime = this.engine.getCurrentTime();
+        const newChain = new Chain('XAI', newYPosition, timing, lastBlockEndTime);
         
         this.engine.blockchains.push(newChain);
         this.updateChainList();

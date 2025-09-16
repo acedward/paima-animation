@@ -13,6 +13,7 @@ import { UserRequestParticle } from './UserRequestParticle.js';
 import { Table } from './Table.js';
 import { BlockProcessor } from './BlockProcessor.js';
 import { EventTypes, processEvent } from './EventTypes.js';
+import { PaimaEngineChain } from './PaimaEngineChain.js';
 
 export class BlockchainEngine {
     _createNewUserDevice() {
@@ -163,54 +164,11 @@ export class BlockchainEngine {
         });
     }
     
-    createBlock(blockchain, timingMs = 2000) {
-        const height = blockHeight;
-        const color = blockchain.color();
-        const counter = blockchain.counter++;
+    createBlock(blockchain) {
+        const block = blockchain.createBlock(this.getCurrentTime(), this.batcherParticles);
         
-        // Time tracking: start time is when previous block ended (or 0 for first block)
-        const startTime = blockchain.lastBlockEndTime;
-        const endTime = this.getCurrentTime();
-        
-        // Position and width will be calculated automatically based on timestamps in the update loop
-        // Initialize with placeholder values
-        const x = 0;
-        const width = 1; // Placeholder, will be calculated in update loop
-        
-        const block = new Block(x, blockchain.yPosition, color, counter, width, height, 0, startTime, endTime, blockchain);
-        
-        // Consume waiting batcher particles for this chain
-        const waitingParticles = this.batcherParticles.filter(p => 
-            p.targetChain.name === blockchain.name && p.state === 'WAITING'
-        );
-    
-        waitingParticles.forEach(particle => {
-            block.events.push(particle.event);
-            particle.isActive = false; // Deactivate the particle
-        });
-
-        blockchain.blocks.push(block);
-        
-        // Update the blockchain's last block end time
-        blockchain.lastBlockEndTime = endTime;
-        
-        // Actions are now created by events, not by Paima blocks
-        
-        if (blockchain.name === 'Paima Engine') {
-            this.blockchains.forEach(secondaryChain => {
-                if (secondaryChain.name === 'Paima Engine') return;
-
-                secondaryChain.blocks.forEach(secondaryBlock => {
-                    if (secondaryBlock.endTime > block.startTime && secondaryBlock.endTime <= block.endTime && !secondaryBlock.eventsProcessed) {
-                        this.createActionsFromBlock(secondaryBlock);
-                        secondaryBlock.eventsProcessed = true;
-
-                        const newColor = mergeColors[this.currentMergeColorIndex % mergeColors.length];
-                        secondaryBlock.startColorAnimation(newColor);
-                        this.currentMergeColorIndex++;
-                    }
-                });
-            });
+        if (blockchain instanceof PaimaEngineChain) {
+            blockchain.processSecondaryChains(this.blockchains, (block) => this.createActionsFromBlock(block));
         }
 
         return block;
@@ -513,12 +471,7 @@ export class BlockchainEngine {
         const activeChains = [];
         this.blockchains.forEach(blockchain => {
             if (blockchain.blocks.length > 0) {
-                let timingLabel = '';
-                if (blockchain.timing.type === 'fixed') {
-                    timingLabel = `(${blockchain.timing.interval / 1000}s)`;
-                } else if (blockchain.timing.type === 'probability') {
-                    timingLabel = '(prob)';
-                }
+                const timingLabel = blockchain.getTimingLabel();
                 activeChains.push(`${blockchain.name.replace(' Chain', '')} ${timingLabel}`);
             }
         });
