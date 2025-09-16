@@ -77,8 +77,11 @@ export class EventParticle {
             this.currentX = currentEndX;
             this.currentY = currentEndY;
             if (this.currentX === this.lastPosition.x && this.currentY === this.lastPosition.y) {
-                this.isFadingOut = true;
-                this.fadeStartTime = Date.now();
+                if (!this.isFadingOut) {
+                    // This is to prevent the particle from being stuck in the same position
+                    this.isFadingOut = true;
+                    this.fadeStartTime = Date.now();
+                }
             }
             this.lastPosition = { x: this.currentX, y: this.currentY };
         }
