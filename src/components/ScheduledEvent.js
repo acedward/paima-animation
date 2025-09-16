@@ -1,7 +1,7 @@
 import { actionConfig } from '../config.js';
 
 /**
- * @class Action
+ * @class ScheduledEvent
  * @description Represents a scheduled event in the animation, which is triggered at a specific time.
  * This class is also aliased as `ScheduledEvent`.
  * 
@@ -10,8 +10,7 @@ import { actionConfig } from '../config.js';
  * and traveling to a target SQL table. It's responsible for its own rendering and for
  * providing detailed tooltip information.
  */
-// This Class is also known as ScheduledEvent
-export class Action {
+export class ScheduledEvent {
     constructor(x, y, scheduledTime, index, block) {
         this.x = x;
         this.y = y;

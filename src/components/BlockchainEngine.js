@@ -1,6 +1,6 @@
 import { tableConfig, blockHeight, mergeColors, actionConfig } from '../config.js';
 import { generateBlockchainEvent } from '../utils/helpers.js';
-import { Action } from './Action.js';
+import { ScheduledEvent } from './ScheduledEvent.js';
 import { Batcher } from './Batcher.js';
 import { BatcherParticle } from './BatcherParticle.js';
 import { Block } from './Block.js';
@@ -148,7 +148,7 @@ export class BlockchainEngine {
         const futureTime = currentTime + randomDelay;
         
         // Calculate initial position (will be updated in update loop)
-        const action = new Action(0, actionConfig.yPosition, futureTime, this.actionCounter++, block);
+        const action = new ScheduledEvent(0, actionConfig.yPosition, futureTime, this.actionCounter++, block);
         
         // Associate the event with this action
         action.events.push(event);
