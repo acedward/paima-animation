@@ -17,10 +17,17 @@ export class UserDevices {
     }
 
     _createNewUserDevice() {
-        const x = this.engine.canvasWidth * 0.87 + Math.random() * randomMultipliers.userDeviceCreationPosition; // Right side of the screen
-        const y = Math.random() * randomMultipliers.userDeviceCreationPosition + this.engine.canvasHeight * 0.7; // Spread vertically
-        const deviceName = `User ${this.userDeviceCounter++}`;
-        return new UserDevice(x, y, deviceName);
+        while (true) {
+            const x = this.engine.canvasWidth * 0.87 + Math.random() * randomMultipliers.userDeviceCreationPosition; // Right side of the screen
+            const y = Math.random() * randomMultipliers.userDeviceCreationPosition + this.engine.canvasHeight * 0.7; // Spread vertically
+            // check if is overlapping with other devices
+            if (this.devices.some(d => d.x + d.radius > x && d.x - d.radius < x && d.y + d.radius > y && d.y - d.radius < y)) {
+                continue;
+            }
+    
+            const deviceName = `User ${this.userDeviceCounter++}`;
+            return new UserDevice(x, y, deviceName);
+        }
     }
 
     update() {

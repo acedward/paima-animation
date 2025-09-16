@@ -7,7 +7,19 @@ export class UserDevice {
         this.x = x;
         this.y = y;
         this.radius = 5;
-        this.color = '#ffffff';
+
+        /* Color list */
+        const colors = [
+            '#FFA680',
+            '#3375BB',
+            '#000000',
+            '#FFFFFF',
+            '#8A4DFF',
+            '#0052FF',
+            '#00A89D',
+        ];
+
+        this.color = colors[Math.floor(Math.random() * colors.length)];
         this.name = name;
         this.lastRequestTime = Date.now();
         this.requestInterval = Math.random() * randomMultipliers.userDeviceRequestInterval.multiplier + randomMultipliers.userDeviceRequestInterval.offset;
@@ -17,6 +29,11 @@ export class UserDevice {
         this.fadeDuration = 1000; // 1 second fade
         this.stateChangeTime = Date.now();
         this.isActive = true;
+
+        this.isAnimating = false;
+        this.animationDuration = 500; // ms
+        this.animationStartTime = 0;
+        this.maxRadius = 10;
     }
 
     update(engine) {
@@ -41,6 +58,10 @@ export class UserDevice {
             this.lastRequestTime = now;
             this.requestInterval = Math.random() * randomMultipliers.userDeviceRequestInterval.multiplier + randomMultipliers.userDeviceRequestInterval.offset;
             
+            const animate = () => {
+                this.isAnimating = true;
+                this.animationStartTime = now;
+            }
             const useBatcher = Math.random() < 0.5;
 
             if (useBatcher && engine.batcher) {
@@ -52,6 +73,7 @@ export class UserDevice {
                     engine.batcher
                 );
                 engine.userRequestParticles.push(particle);
+                animate();
             } else if (engine.blockchains && engine.blockchains.length > 0) {
                 const targetableChains = engine.blockchains.filter(bc => bc.name !== 'Paima Engine');
                 if (targetableChains.length > 0) {
@@ -68,6 +90,7 @@ export class UserDevice {
                         randomChain
                     );
                     engine.userRequestParticles.push(particle);
+                    animate();
                 }
             } else if (engine.batcher) { // Fallback to batcher if no blockchains
                 const particle = new UserRequestParticle(
@@ -78,6 +101,7 @@ export class UserDevice {
                     engine.batcher
                 );
                 engine.userRequestParticles.push(particle);
+                animate();
             }
         }
     }
@@ -90,11 +114,26 @@ export class UserDevice {
     }
 
     draw(ctx) {
+        let currentRadius = this.radius;
+        if (this.isAnimating) {
+            const now = Date.now();
+            const elapsed = now - this.animationStartTime;
+
+            if (elapsed < this.animationDuration) {
+                const progress = elapsed / this.animationDuration;
+                // Use a sine wave for a smooth grow-and-shrink effect
+                const animationEffect = Math.sin(progress * Math.PI);
+                currentRadius = this.radius + (this.maxRadius - this.radius) * animationEffect;
+            } else {
+                this.isAnimating = false;
+            }
+        }
+
         ctx.save();
         ctx.globalAlpha = this.opacity;
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.arc(this.x, this.y, currentRadius, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore();
     }
