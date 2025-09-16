@@ -14,6 +14,9 @@ export class EventParticle {
         this.isActive = true;
         this.hasReached = false;
         this.opacity = 1.0;
+        this.isFadingOut = false;
+        this.fadeStartTime = 0;
+        this.fadeDuration = 500;
         
         // Calculate offset from block position
         this.offsetX = endX - targetBlock.x; // Offset from block's left edge
@@ -27,9 +30,23 @@ export class EventParticle {
             'account_created': '#2ecc71'
         };
     }
+
+    startFadingOut() {
+        this.isFadingOut = true;
+        this.fadeStartTime = Date.now();
+    }
     
     update(engine) {
         if (!this.isActive) return;
+
+        if (this.isFadingOut) {
+            const elapsed = Date.now() - this.fadeStartTime;
+            this.opacity = Math.max(0, 1.0 - elapsed / this.fadeDuration);
+            if (this.opacity <= 0) {
+                this.isActive = false;
+                return;
+            }
+        }
         
         const elapsed = Date.now() - this.startTime;
         const progress = Math.min(elapsed / this.duration, 1);
@@ -55,9 +72,11 @@ export class EventParticle {
             this.currentX = currentEndX;
             this.currentY = currentEndY;
             
-            // Pulse effect
-            const pulseTime = Date.now() * 0.003;
-            this.opacity = 0.8 + 0.2 * Math.sin(pulseTime);
+            if (!this.isFadingOut) {
+                // Pulse effect
+                const pulseTime = Date.now() * 0.003;
+                this.opacity = 0.8 + 0.2 * Math.sin(pulseTime);
+            }
         }
     }
     

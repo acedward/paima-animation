@@ -57,7 +57,7 @@ export class UserDevice {
                 if (targetableChains.length > 0) {
                     const randomChain = targetableChains[Math.floor(Math.random() * targetableChains.length)];
                     const nowPosition = engine.blockProcessor.nowPosition;
-                    const targetX = nowPosition + 100;
+                    const targetX = nowPosition + 10;
                     const targetY = randomChain.yPosition + blockHeight / 2;
                     
                     const particle = new UserRequestParticle(

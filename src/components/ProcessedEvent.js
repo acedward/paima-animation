@@ -1,7 +1,7 @@
 import { Block } from './Block.js';
 
 export class ProcessedEvent {
-    constructor(action, target, engine) {
+    constructor(action, target, engine, startPos = null) {
         this.engine = engine;
         this.action = action;
         this.x = action.x;
@@ -17,7 +17,7 @@ export class ProcessedEvent {
         this.addedToBlock = false;
 
         const bp = this.engine.blockProcessor;
-        const start = { x: action.x, y: action.y };
+        const start = startPos || { x: action.x, y: action.y };
         const center = { x: bp.centerX, y: bp.centerY };
         
         let finalTargetPos;
@@ -25,14 +25,29 @@ export class ProcessedEvent {
         if (target instanceof Block) { // target is a block (Paima)
             finalTargetPos = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
             const bottomExit = { x: bp.bottomExitX, y: bp.bottomExitY };
-            this.path = [start, center, bottomExit, finalTargetPos];
-            this.pathDurations = [500, 300, 600]; // ms for each segment
+            if (startPos) {
+                this.path = [start, bottomExit, finalTargetPos];
+                this.pathDurations = [300, 600]; // ms for each segment
+            } else {
+                this.path = [start, center, bottomExit, finalTargetPos];
+                this.pathDurations = [500, 300, 600]; // ms for each segment
+            }
             this.color = '#006400'; // Darker green
+        } else if (target.hasOwnProperty('nowPosition')) { // Target is the Block Processor
+            finalTargetPos = { x: action.x, y: bp.centerY };
+            this.path = [start, finalTargetPos];
+            this.pathDurations = [500];
+            this.color = '#3498db'; // A distinct blue color
         } else { // target is a table (SQL)
             finalTargetPos = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
             const leftExit = { x: bp.leftExitX, y: bp.leftExitY };
-            this.path = [start, center, leftExit, finalTargetPos];
-            this.pathDurations = [500, 300, 1200];
+            if (startPos) {
+                this.path = [start, leftExit, finalTargetPos];
+                this.pathDurations = [300, 1200];
+            } else {
+                this.path = [start, center, leftExit, finalTargetPos];
+                this.pathDurations = [500, 300, 1200];
+            }
             this.color = '#138a5e'; // Original Paima green
         }
 
@@ -77,15 +92,28 @@ export class ProcessedEvent {
         this.y = segmentStart.y + (segmentEnd.y - segmentStart.y) * progress;
 
         if (progress >= 1) {
-            if (this.currentPathSegment === 0) {
-                this.engine.triggerBlockProcessorAnimation();
-            }
             this.currentPathSegment++;
             this.segmentStartTime = Date.now();
             if (this.currentPathSegment >= this.pathDurations.length) {
                 this.hasReached = true;
+
+                if (this.target.hasOwnProperty('nowPosition')) {
+                    this.engine.triggerBlockProcessorAnimation();
+
+                    if (this.action.targetTable) {
+                        const eventToSql = new ProcessedEvent(this.action, this.action.targetTable, this.engine, { x: this.x, y: this.y });
+                        this.engine.processedEvents.push(eventToSql);
+                    }
+                    if (this.action.targetPaimaBlock) {
+                        const eventToPaima = new ProcessedEvent(this.action, this.action.targetPaimaBlock, this.engine, { x: this.x, y: this.y });
+                        this.engine.processedEvents.push(eventToPaima);
+                    }
+                }
+
                 if (!(this.target instanceof Block)) {
-                    this.engine.processActionEvents(this.action);
+                    if (!this.target.hasOwnProperty('nowPosition')) {
+                        this.engine.processActionEvents(this.action);
+                    }
                     this.isActive = false;
                 }
             }

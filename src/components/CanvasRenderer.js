@@ -1102,8 +1102,8 @@ export class CanvasRenderer {
         // Draw title for Scheduled Events
         this.ctx.fillStyle = '#fff';
         this.ctx.font = 'bold 16px Arial';
-        this.ctx.textAlign = 'left';
-        this.ctx.fillText('Scheduled Events', 20, 255);
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('Scheduled Events', this.canvas.width * 0.9, 255);
         
         // Draw all actions
         this.engine.actions.forEach(action => {
@@ -1259,7 +1259,7 @@ export class CanvasRenderer {
         this.ctx.textAlign = 'center';
         this.ctx.fillText('Batcher', batcher.x + batcher.width / 2, batcher.y + 20);
         this.ctx.font = '12px Arial';
-        this.ctx.fillText(`Received: ${batcher.requestsReceived}`, batcher.x + batcher.width / 2, batcher.y + 40);
+        this.ctx.fillText(`Processed: ${batcher.requestsReceived}`, batcher.x + batcher.width / 2, batcher.y + 40);
         this.ctx.restore();
     }
 

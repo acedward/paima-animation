@@ -1,7 +1,7 @@
 import { actionConfig } from '../config.js';
 
 export class Action {
-    constructor(x, y, scheduledTime, index) {
+    constructor(x, y, scheduledTime, index, block) {
         this.x = x;
         this.y = y;
         this.scheduledTime = scheduledTime; // When this action should execute
@@ -13,6 +13,9 @@ export class Action {
         this.isActive = true;
         this.isExecuted = false;
         this.events = []; // Store events that target this action
+        this.block = block;
+        this.targetTable = null;
+        this.targetPaimaBlock = null;
         
         // Travel to table state
         this.isTravelingToTable = false;

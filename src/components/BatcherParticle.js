@@ -31,7 +31,7 @@ export class BatcherParticle {
         if (!this.isActive) return;
 
         const nowPosition = this.engine.blockProcessor.nowPosition;
-        const waitPositionX = nowPosition + 100;
+        const waitPositionX = nowPosition + 10;
         // Target Y is the middle of the chain's row
         const targetY = this.targetChain.yPosition + blockHeight / 2; 
 

@@ -9,6 +9,7 @@ import { EventParticle } from './EventParticle.js';
 import { ProcessedEvent } from './ProcessedEvent.js';
 import { UserDevice } from './UserDevice.js';
 import { randomMultipliers } from '../random.js';
+import { UserRequestParticle } from './UserRequestParticle.js';
 
 export class BlockchainEngine {
     _createNewUserDevice() {
@@ -43,7 +44,7 @@ export class BlockchainEngine {
         this.blockProcessorToBatcherChance = 0.005;
 
         this.blockProcessor = {
-            nowPosition: this.canvasWidth * 0.725,
+            nowPosition: this.canvasWidth * 0.805,
             width: 180,
             height: 120,
             y: 230,
@@ -75,66 +76,6 @@ export class BlockchainEngine {
         // const chainSpacing = 100; // Decreased from 120 to 100 for better fit
         
         this.blockchains = [
-            // {
-            //     name: 'Paima Engine',
-            //     color: () => '#19b17b',
-            //     yPosition: chainStartY,
-            //     timing: { type: 'fixed', interval: 1000 },
-            //     counter: 0,
-            //     blocks: [],
-            //     lastBlockTime: 0,
-            //     lastBlockEndTime: 0 // Track when the last block ended
-            // },
-            // {
-            //     name: 'Ethereum',
-            //     color: () => greyColor,
-            //     yPosition: chainStartY + chainSpacing,
-            //     timing: { type: 'fixed', interval: 12000 }, // 12 seconds
-            //     counter: 0,
-            //     blocks: [],
-            //     lastBlockTime: 0,
-            //     lastBlockEndTime: 0
-            // },
-            // {
-            //     name: 'Arbitrum',
-            //     color: () => greyColor,
-            //     yPosition: chainStartY + chainSpacing * 2,
-            //     timing: { type: 'fixed', interval: 250 }, // ~0.25 seconds
-            //     counter: 0,
-            //     blocks: [],
-            //     lastBlockTime: 0,
-            //     lastBlockEndTime: 0
-            // },
-            // {
-            //     name: 'Solana',
-            //     color: () => greyColor,
-            //     yPosition: chainStartY + chainSpacing * 3,
-            //     timing: { type: 'fixed', interval: 400 }, // ~2 seconds
-            //     counter: 0,
-            //     blocks: [],
-            //     lastBlockTime: 0,
-            //     lastBlockEndTime: 0
-            // },
-            // {
-            //     name: 'Cardano',
-            //     color: () => greyColor,
-            //     yPosition: chainStartY + chainSpacing * 4,
-            //     timing: { type: 'fixed', interval: 20000 }, // 20 seconds
-            //     counter: 0,
-            //     blocks: [],
-            //     lastBlockTime: 0,
-            //     lastBlockEndTime: 0
-            // },
-            // {
-            //     name: 'Midnight',
-            //     color: () => greyColor,
-            //     yPosition: chainStartY + chainSpacing * 5,
-            //     timing: { type: 'fixed', interval: 6000 }, // 6 seconds
-            //     counter: 0,
-            //     blocks: [],
-            //     lastBlockTime: 0,
-            //     lastBlockEndTime: 0
-            // }
         ];
     }
     
@@ -403,7 +344,7 @@ export class BlockchainEngine {
         return block;
     }
     
-    createActionForEvent(event) {
+    createActionForEvent(event, block) {
         // Create a single action for a specific event (1:1 relationship)
         const currentTime = this.getCurrentTime();
         
@@ -412,7 +353,7 @@ export class BlockchainEngine {
         const futureTime = currentTime + randomDelay;
         
         // Calculate initial position (will be updated in update loop)
-        const action = new Action(0, actionConfig.yPosition, futureTime, this.actionCounter++);
+        const action = new Action(0, actionConfig.yPosition, futureTime, this.actionCounter++, block);
         
         // Associate the event with this action
         action.events.push(event);
@@ -424,7 +365,7 @@ export class BlockchainEngine {
     createActionsFromBlock(block) {
         block.events.forEach((event, index) => {
             // Create an action for the event
-            const action = this.createActionForEvent(event);
+            const action = this.createActionForEvent(event, block);
 
             // Create a particle from the block to the action
             const startX = block.x + block.width / 2;
@@ -536,7 +477,7 @@ export class BlockchainEngine {
                         );
                         newParticle.state = 'WAITING'; // It's already at the waiting position, so it can be picked up by next block
                         const nowPosition = this.blockProcessor.nowPosition;
-                        const waitPositionX = nowPosition + 100;
+                        const waitPositionX = nowPosition + 10;
                         newParticle.currentX = waitPositionX;
                         newParticle.currentY = particle.target.yPosition + blockHeight / 2;
                         this.batcherParticles.push(newParticle);
@@ -570,25 +511,27 @@ export class BlockchainEngine {
             const actionResult = action.update(currentEngineTime);
             if (actionResult) {
                 if (typeof actionResult === 'object' && actionResult.readyToTravel) {
+                    action.x = this.blockProcessor.nowPosition;
                     // Action finished waiting at NOW, start travel to appropriate table
                     const targetTable = this.selectAppropriateTable(action);
-                    // action.startTravelToTable(targetTable);
+                    action.targetTable = targetTable;
+
                     const paimaChain = this.blockchains.find(bc => bc.name === 'Paima Engine');
-                    let targetPaimaBlock = null;
                     if (paimaChain && paimaChain.blocks.length > 0) {
-                        targetPaimaBlock = paimaChain.blocks[paimaChain.blocks.length - 1];
+                        action.targetPaimaBlock = paimaChain.blocks[paimaChain.blocks.length - 1];
                     }
 
-                    // Create two processed events
-                    const eventToSql = new ProcessedEvent(action, targetTable, this);
-                    this.processedEvents.push(eventToSql);
-
-                    if (targetPaimaBlock) {
-                        const eventToPaima = new ProcessedEvent(action, targetPaimaBlock, this);
-                        this.processedEvents.push(eventToPaima);
-                    }
-                    
                     action.startFadingOut();
+                    setTimeout(() => {
+                        const eventToBlockProcessor = new ProcessedEvent(action, this.blockProcessor, this);
+                        this.processedEvents.push(eventToBlockProcessor);
+                    }, action.fadeDuration);
+
+                    this.eventParticles.forEach(p => {
+                        if (p.targetBlock === action) {
+                            p.startFadingOut();
+                        }
+                    });
                 }
             }
         });
@@ -603,9 +546,6 @@ export class BlockchainEngine {
                 return !removedActions.some(action => particle.targetBlock === action);
             });
         }
-        
-        // Fixed NOW line position
-        const nowPosition = this.canvasWidth * 0.8; // 960px for 1200px canvas
         
         // Convert time to pixels (1 second = 90 pixels - 10% slower)
         const pixelsPerSecond = 80;
@@ -648,8 +588,8 @@ export class BlockchainEngine {
                 const endOffset = endTimeAgo * pixelsPerSecond / 1000;
                 
                 // Position block based on its temporal span
-                const rightEdge = nowPosition - endOffset;
-                const leftEdge = nowPosition - startOffset;
+                const rightEdge = this.blockProcessor.nowPosition - endOffset;
+                const leftEdge = this.blockProcessor.nowPosition - startOffset;
                 
                 // Set block position and width based on actual time span
                 block.x = leftEdge;
@@ -667,10 +607,10 @@ export class BlockchainEngine {
                 const timeOffset = timeUntilExecution * pixelsPerSecond / 1000;
                 
                 // Position action based on when it should execute
-                action.x = nowPosition + timeOffset;
+                action.x = this.blockProcessor.nowPosition + timeOffset;
             } else if (action.isWaitingAtNow) {
                 // Keep action at NOW line while waiting
-                action.x = nowPosition;
+                action.x = this.blockProcessor.nowPosition;
             }
             // If traveling to table, position is handled by the action's update method
         });
