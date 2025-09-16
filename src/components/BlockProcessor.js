@@ -124,7 +124,7 @@ export class BlockProcessor {
         return {
             title: 'Block Processor',
             content: 'Processes events from merged blocks, validates and transforms contents into SQL data and generates Paima L2 Blocks.',
-            data: `Status: ${this.isAnimating ? 'Animating' : 'Idle'}`
+            data: `Status: ${this.isAnimating ? 'Applying State Transformations' : 'Idle'}`
         };
     }
 }

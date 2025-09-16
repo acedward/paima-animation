@@ -161,6 +161,10 @@ export class Block {
         ctx.lineWidth = 2;
         ctx.strokeRect(0, 0, this.width, this.height);
         
+
+        // Draw event indicators (within transformation context)
+        this._drawEventIndicators(ctx);
+        
         // Always draw block number and timing info
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
@@ -192,11 +196,6 @@ export class Block {
             ctx.font = 'bold 9px Arial';
             ctx.fillText("#" + this.index, this.width/2, this.height/2);
         }
-        
-        
-        // Draw event indicators (within transformation context)
-        this._drawEventIndicators(ctx);
-        
         ctx.restore();
     }
 
@@ -225,7 +224,12 @@ export class Block {
             if (eventY - dotSize / 2 < margin) return;
 
             // Draw event indicator dot
-            ctx.fillStyle = EventColors[event.type] || '#fff';
+            if (this.blockchain.name === 'Paima Engine') {
+                // darker green for paima engine
+                ctx.fillStyle = '#006400';
+            } else {
+                ctx.fillStyle = EventColors[event.type] || '#fff';
+            }
             ctx.beginPath();
             ctx.arc(eventX, eventY, dotSize / 2, 0, 2 * Math.PI);
             ctx.fill();

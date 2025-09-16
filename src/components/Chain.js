@@ -33,7 +33,11 @@ export class Chain {
     
         relevantParticles.forEach(particle => {
             block.events.push(particle.event);
-            particle.isActive = false;
+            particle.targetBlock = block;
+            particle.state = 'TRAVELING_TO_BLOCK';
+            particle.startX = particle.currentX;
+            particle.startY = particle.currentY;
+            particle.startTime = Date.now();
         });
 
         this.blocks.push(block);

@@ -11,12 +11,13 @@ export class BatcherParticle {
         this.targetChain = targetChain; // Store the whole chain object
         this.engine = engine;
         this.event = event;
+        this.targetBlock = null;
         
         this.duration = duration;
         this.startTime = Date.now();
         this.isActive = true;
         
-        this.state = 'TRAVELING_TO_WAIT_POINT'; // TRAVELING_TO_WAIT_POINT, WAITING
+        this.state = 'TRAVELING_TO_WAIT_POINT'; // TRAVELING_TO_WAIT_POINT, WAITING, TRAVELING_TO_BLOCK
         
         this.color = EventColors[event.type] || '#e67e22';
         this.opacity = 1.0;
@@ -47,6 +48,20 @@ export class BatcherParticle {
             // Just wait at the position
             this.currentX = waitPositionX;
             this.currentY = targetY;
+        } else if (this.state === 'TRAVELING_TO_BLOCK' && this.targetBlock) {
+            const elapsed = Date.now() - this.startTime;
+            const progress = Math.min(elapsed / this.duration, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 2);
+
+            const targetX = this.targetBlock.x + this.targetBlock.width / 2;
+            const targetY = this.targetBlock.y + this.targetBlock.height / 2;
+
+            this.currentX = this.startX + (targetX - this.startX) * easeProgress;
+            this.currentY = this.startY + (targetY - this.startY) * easeProgress;
+
+            if (progress >= 1) {
+                this.isActive = false;
+            }
         }
     }
 
