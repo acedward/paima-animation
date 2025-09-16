@@ -100,4 +100,116 @@ export class Action {
         // Keep original color, don't change to orange
         this.lastProgressLogged = -1; // Reset progress logging
     }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        
+        if (this.isTravelingToTable || this.isFadingOut) {
+            // Draw clean traveling/fading action - slightly bigger than normal
+            const size = 12; // Slightly bigger than normal (20px width -> 12px radius)
+            const centerX = this.x + this.width / 2;
+            const centerY = this.y + this.height / 2;
+            
+            ctx.fillStyle = this.color;
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            
+            // Smooth shape transition based on progress
+            if (this.shapeTransitionProgress < 0.3) {
+                // Early travel: show current shape only
+                this._renderShape(ctx, this.currentShape, centerX, centerY, size);
+            } else if (this.shapeTransitionProgress > 0.7) {
+                // Late travel: show target shape only
+                this._renderShape(ctx, this.targetShape, centerX, centerY, size);
+            } else {
+                // Middle travel: blend both shapes
+                const blendProgress = (this.shapeTransitionProgress - 0.3) / 0.4; // 0 to 1 over the 0.3-0.7 range
+                
+                // Draw current shape with decreasing opacity
+                ctx.globalAlpha = this.opacity * (1 - blendProgress);
+                this._renderShape(ctx, this.currentShape, centerX, centerY, size);
+                
+                // Draw target shape with increasing opacity
+                ctx.globalAlpha = this.opacity * blendProgress;
+                this._renderShape(ctx, this.targetShape, centerX, centerY, size);
+                
+                // Reset alpha
+                ctx.globalAlpha = this.opacity;
+            }
+        } else if (this.isWaitingAtNow) {
+            // Draw action waiting at NOW line - same as normal but at NOW position
+            // Draw action shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(this.x + 1, this.y + 1, this.width, this.height);
+            
+            // Draw main action square
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            
+            // Draw action border
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(this.x, this.y, this.width, this.height);
+            
+            // Draw action number
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.index.toString(), this.x + this.width/2, this.y + this.height/2 + 3);
+        } else {
+            // Draw normal scheduled action
+            // Draw action shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(this.x + 1, this.y + 1, this.width, this.height);
+            
+            // Draw main action square
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            
+            // Draw action border
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(this.x, this.y, this.width, this.height);
+            
+            // Draw action number
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.index.toString(), this.x + this.width/2, this.y + this.height/2 + 3);
+        }
+        
+        ctx.restore();
+    }
+
+    _renderShape(ctx, shape, x, y, size) {
+        ctx.beginPath();
+        
+        switch (shape) {
+            case 'triangle':
+                ctx.moveTo(x, y - size);
+                ctx.lineTo(x - size, y + size);
+                ctx.lineTo(x + size, y + size);
+                ctx.closePath();
+                break;
+            case 'square':
+                ctx.rect(x - size, y - size, size * 2, size * 2);
+                break;
+            case 'diamond':
+                ctx.moveTo(x, y - size);
+                ctx.lineTo(x + size, y);
+                ctx.lineTo(x, y + size);
+                ctx.lineTo(x - size, y);
+                ctx.closePath();
+                break;
+            case 'circle':
+                ctx.arc(x, y, size, 0, 2 * Math.PI);
+                break;
+            default:
+                ctx.rect(x - size, y - size, size * 2, size * 2);
+                break;
+        }
+        
+        ctx.fill();
+    }
 }

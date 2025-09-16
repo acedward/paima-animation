@@ -11,6 +11,8 @@ import { UserDevice } from './UserDevice.js';
 import { randomMultipliers } from '../random.js';
 import { UserRequestParticle } from './UserRequestParticle.js';
 import { Table } from './Table.js';
+import { BlockProcessor } from './BlockProcessor.js';
+import { EventTypes, processEvent } from './EventTypes.js';
 
 export class BlockchainEngine {
     _createNewUserDevice() {
@@ -44,26 +46,7 @@ export class BlockchainEngine {
 
         this.blockProcessorToBatcherChance = 0.005;
 
-        this.blockProcessor = {
-            nowPosition: this.canvasWidth * 0.805,
-            width: 180,
-            height: 120,
-            y: 230,
-        };
-        this.blockProcessor.x = this.blockProcessor.nowPosition - this.blockProcessor.width / 2;
-        this.blockProcessor.centerX = this.blockProcessor.x + this.blockProcessor.width / 2;
-        this.blockProcessor.centerY = this.blockProcessor.y + this.blockProcessor.height / 2;
-        this.blockProcessor.leftExitX = this.blockProcessor.x;
-        this.blockProcessor.leftExitY = this.blockProcessor.y + this.blockProcessor.height / 2;
-        this.blockProcessor.bottomExitX = this.blockProcessor.x + this.blockProcessor.width / 2;
-        this.blockProcessor.bottomExitY = this.blockProcessor.y + this.blockProcessor.height;
-        
-        // Animation state
-        this.blockProcessor.isAnimating = false;
-        this.blockProcessor.animationStartTime = 0;
-        this.blockProcessor.animationDuration = 500; // ms
-        this.blockProcessor.highlightedStateKey = null;
-        this.blockProcessor.highlightedArrowKey = null;
+        this.blockProcessor = new BlockProcessor(this.canvasWidth * 0.805);
         
         // Time tracking - starts at 0 when engine initializes
         this.engineStartTime = Date.now();
@@ -134,48 +117,12 @@ export class BlockchainEngine {
         return Date.now() - this.engineStartTime;
     }
     
-    // Process blockchain events and update SQL tables
-    // NOTE: This now only processes events when they reach tables via actions
-    processBlockchainEvents(events) {
-        events.forEach(event => {
-            const currentTime = Date.now();
-            
-            switch (event.type) {
-                case 'erc20_transfer':
-                    this.updateERC20Balance(event.data.to, event.data.amount, currentTime);
-                    break;
-                case 'erc721_transfer':
-                    this.updateERC721Ownership(event.data.tokenId, event.data.to, currentTime);
-                    break;
-                case 'game_move':
-                    this.updateCurrentPosition(event.data.userId, event.data.x, event.data.y, event.data.characterId, currentTime);
-                    break;
-                case 'account_created':
-                    this.updateAccountsToAddress(event.data.userId, event.data.address, currentTime);
-                    break;
-            }
-        });
-    }
-    
     // Process events from an action when it reaches a table
     processActionEvents(action) {
         const currentTime = Date.now();
         
         action.events.forEach(event => {
-            switch (event.type) {
-                case 'erc20_transfer':
-                    this.updateERC20Balance(event.data.to, event.data.amount, currentTime);
-                    break;
-                case 'erc721_transfer':
-                    this.updateERC721Ownership(event.data.tokenId, event.data.to, currentTime);
-                    break;
-                case 'game_move':
-                    this.updateCurrentPosition(event.data.userId, event.data.x, event.data.y, event.data.characterId, currentTime);
-                    break;
-                case 'account_created':
-                    this.updateAccountsToAddress(event.data.userId, event.data.address, currentTime);
-                    break;
-            }
+            processEvent(event, this.tables, currentTime);
         });
     }
     
@@ -190,10 +137,10 @@ export class BlockchainEngine {
         
         // Priority mapping for event types to tables
         const eventToTable = {
-            'erc20_transfer': 'erc20_balance',
-            'erc721_transfer': 'erc721_ownership',
-            'game_move': 'current_position',
-            'account_created': 'accounts_to_address'
+            [EventTypes.ERC20_TRANSFER]: 'erc20_balance',
+            [EventTypes.ERC721_TRANSFER]: 'erc721_ownership',
+            [EventTypes.GAME_MOVE]: 'current_position',
+            [EventTypes.ACCOUNT_CREATED]: 'accounts_to_address'
         };
         
         // Find the first event type that maps to a table
@@ -208,26 +155,6 @@ export class BlockchainEngine {
         const tableNames = Object.keys(this.tables);
         const randomTableName = tableNames[Math.floor(Math.random() * tableNames.length)];
         return this.tables[randomTableName];
-    }
-    
-    updateERC20Balance(address, amount, timestamp) {
-        const table = this.tables.erc20_balance;
-        table.updateData([address, amount], timestamp);
-    }
-    
-    updateERC721Ownership(tokenId, owner, timestamp) {
-        const table = this.tables.erc721_ownership;
-        table.updateData([tokenId.toString(), owner], timestamp);
-    }
-    
-    updateCurrentPosition(userId, x, y, characterId, timestamp) {
-        const table = this.tables.current_position;
-        table.updateData([userId.toString(), x.toString(), y.toString(), characterId.toString()], timestamp);
-    }
-    
-    updateAccountsToAddress(userId, address, timestamp) {
-        const table = this.tables.accounts_to_address;
-        table.updateData([userId.toString(), address], timestamp);
     }
     
     updateTables() {

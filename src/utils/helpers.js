@@ -1,4 +1,5 @@
 import { randomMultipliers } from '../random.js';
+import { EventTypes } from '../components/EventTypes.js';
 
 // Calculate block width based on timing
 export function getBlockWidth(timingMs) {
@@ -40,15 +41,15 @@ export function generateRandomAssetId() {
 
 // Generate blockchain events
 export function generateBlockchainEvent(chainName) {
-    const eventTypes = ['erc20_transfer', 'erc721_transfer', 'game_move', 'account_created'];
+    const eventTypes = Object.values(EventTypes);
     const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
     
     const timestamp = Date.now();
     
     switch (eventType) {
-        case 'erc20_transfer':
+        case EventTypes.ERC20_TRANSFER:
             return {
-                type: 'erc20_transfer',
+                type: EventTypes.ERC20_TRANSFER,
                 chain: chainName,
                 timestamp: timestamp,
                 data: {
@@ -57,9 +58,9 @@ export function generateBlockchainEvent(chainName) {
                     amount: generateRandomBalance()
                 }
             };
-        case 'erc721_transfer':
+        case EventTypes.ERC721_TRANSFER:
             return {
-                type: 'erc721_transfer',
+                type: EventTypes.ERC721_TRANSFER,
                 chain: chainName,
                 timestamp: timestamp,
                 data: {
@@ -68,10 +69,10 @@ export function generateBlockchainEvent(chainName) {
                     to: generateRandomAddress()
                 }
             };
-        case 'game_move':
+        case EventTypes.GAME_MOVE:
             const pos = generateRandomPosition();
             return {
-                type: 'game_move',
+                type: EventTypes.GAME_MOVE,
                 chain: chainName,
                 timestamp: timestamp,
                 data: {
@@ -81,9 +82,9 @@ export function generateBlockchainEvent(chainName) {
                     characterId: generateRandomCharacterId()
                 }
             };
-        case 'account_created':
+        case EventTypes.ACCOUNT_CREATED:
             return {
-                type: 'account_created',
+                type: EventTypes.ACCOUNT_CREATED,
                 chain: chainName,
                 timestamp: timestamp,
                 data: {

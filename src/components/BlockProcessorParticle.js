@@ -29,4 +29,13 @@ export class BlockProcessorParticle {
             }
         }
     }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.fillStyle = '#f39c12'; // A different color to distinguish
+        ctx.beginPath();
+        ctx.arc(this.currentX, this.currentY, 3, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore();
+    }
 }

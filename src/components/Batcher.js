@@ -33,4 +33,21 @@ export class Batcher {
             }
         }
     }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Batcher', this.x + this.width / 2, this.y + 20);
+        ctx.font = '12px Arial';
+        ctx.fillText(`Processed: ${this.requestsReceived}`, this.x + this.width / 2, this.y + 40);
+        ctx.restore();
+    }
 }

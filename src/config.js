@@ -13,7 +13,7 @@ export const mergeColors = [
 // Table configuration
 export const tableConfig = {
     width: 220,
-    height: 140,
+    height: 150,
     headerHeight: 25,
     rowHeight: 20,
     maxRows: 5,

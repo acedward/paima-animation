@@ -2,6 +2,7 @@ import { BlockchainEngine } from './BlockchainEngine.js';
 import { tableConfig } from '../config.js';
 import { Block } from './Block.js';
 import { randomMultipliers } from '../random.js';
+import { EventLegend } from './EventLegend.js';
 // Enhanced UI Controller with dynamic chain management and tooltips
 export class CanvasRenderer {
     constructor(canvasId) {
@@ -10,6 +11,8 @@ export class CanvasRenderer {
         this.animationId = null;
         this.isPaused = false;
         this.lastUpdateTime = 0;
+        
+        this.eventLegend = new EventLegend(this.canvas.width - 165, this.canvas.height - 120);
         
         // Initialize the blockchain engine with only Paima Engine
         this.engine = new BlockchainEngine(this.canvas.width);
@@ -609,164 +612,12 @@ export class CanvasRenderer {
     
     // All the existing drawing methods remain the same...
     
-    drawEventIndicators(block) {
-        const allEvents = [...block.events, ...(block.accumulatedEvents || []).flatMap(pe => pe.events || [])];
-        if (allEvents.length === 0) return;
-        
-        // Only draw if block is wide enough
-        if (block.width < 30) return;
-        
-        // Draw event indicators at the same positions where particles will land
-        const dotSize = 3;
-        
-        // Event type colors
-        const eventColors = {
-            'erc20_transfer': '#f39c12',
-            'erc721_transfer': '#9b59b6',
-            'game_move': '#3498db',
-            'account_created': '#2ecc71'
-        };
-        
-        if (block.blockchain.name === 'Paima Engine') return;
-        allEvents.forEach((event, index) => {
-            // Same positioning as particles: x=10, x=20, x=30, etc.
-            const eventX = 10 + (index * 10);
-            const eventY = 15; // 15px from top of block
-            
-            // Don't draw if it would go outside the block
-            if (eventX + 5 > block.width) return; // Leave margin at right edge
-            
-            // Draw event indicator dot
-            this.ctx.fillStyle = eventColors[event.type] || '#fff';
-            this.ctx.beginPath();
-            this.ctx.arc(eventX, eventY, dotSize / 2, 0, 2 * Math.PI);
-            this.ctx.fill();
-            
-            // Draw small border around dot
-            this.ctx.strokeStyle = '#000';
-            this.ctx.lineWidth = 0.5;
-            this.ctx.stroke();
-        });
-    }
-    
     drawChainLabel(y, label, height, color = '#fff', x = 20) {
         this.ctx.fillStyle = color;
         this.ctx.font = 'bold 16px Arial';
         this.ctx.textAlign = 'left';
         // Position label above the blocks
         this.ctx.fillText(label, x, y - 10);
-    }
-    
-    drawAction(action) {
-        this.ctx.save();
-        this.ctx.globalAlpha = action.opacity;
-        
-        if (action.isTravelingToTable || action.isFadingOut) {
-            // Draw clean traveling/fading action - slightly bigger than normal
-            const size = 12; // Slightly bigger than normal (20px width -> 12px radius)
-            const centerX = action.x + action.width / 2;
-            const centerY = action.y + action.height / 2;
-            
-            this.ctx.fillStyle = action.color;
-            this.ctx.strokeStyle = '#ccc';
-            this.ctx.lineWidth = 1;
-            
-            // Smooth shape transition based on progress
-            if (action.shapeTransitionProgress < 0.3) {
-                // Early travel: show current shape only
-                this.renderActionShape(action.currentShape, centerX, centerY, size);
-            } else if (action.shapeTransitionProgress > 0.7) {
-                // Late travel: show target shape only
-                this.renderActionShape(action.targetShape, centerX, centerY, size);
-            } else {
-                // Middle travel: blend both shapes
-                const blendProgress = (action.shapeTransitionProgress - 0.3) / 0.4; // 0 to 1 over the 0.3-0.7 range
-                
-                // Draw current shape with decreasing opacity
-                this.ctx.globalAlpha = action.opacity * (1 - blendProgress);
-                this.renderActionShape(action.currentShape, centerX, centerY, size);
-                
-                // Draw target shape with increasing opacity
-                this.ctx.globalAlpha = action.opacity * blendProgress;
-                this.renderActionShape(action.targetShape, centerX, centerY, size);
-                
-                // Reset alpha
-                this.ctx.globalAlpha = action.opacity;
-            }
-        } else if (action.isWaitingAtNow) {
-            // Draw action waiting at NOW line - same as normal but at NOW position
-            // Draw action shadow
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            this.ctx.fillRect(action.x + 1, action.y + 1, action.width, action.height);
-            
-            // Draw main action square
-            this.ctx.fillStyle = action.color;
-            this.ctx.fillRect(action.x, action.y, action.width, action.height);
-            
-            // Draw action border
-            this.ctx.strokeStyle = '#ccc';
-            this.ctx.lineWidth = 1;
-            this.ctx.strokeRect(action.x, action.y, action.width, action.height);
-            
-            // Draw action number
-            this.ctx.fillStyle = '#000';
-            this.ctx.font = 'bold 10px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText(action.index.toString(), action.x + action.width/2, action.y + action.height/2 + 3);
-        } else {
-            // Draw normal scheduled action
-            // Draw action shadow
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            this.ctx.fillRect(action.x + 1, action.y + 1, action.width, action.height);
-            
-            // Draw main action square
-            this.ctx.fillStyle = action.color;
-            this.ctx.fillRect(action.x, action.y, action.width, action.height);
-            
-            // Draw action border
-            this.ctx.strokeStyle = '#ccc';
-            this.ctx.lineWidth = 1;
-            this.ctx.strokeRect(action.x, action.y, action.width, action.height);
-            
-            // Draw action number
-            this.ctx.fillStyle = '#000';
-            this.ctx.font = 'bold 10px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText(action.index.toString(), action.x + action.width/2, action.y + action.height/2 + 3);
-        }
-        
-        this.ctx.restore();
-    }
-    
-    renderActionShape(shape, x, y, size) {
-        this.ctx.beginPath();
-        
-        switch (shape) {
-            case 'triangle':
-                this.ctx.moveTo(x, y - size);
-                this.ctx.lineTo(x - size, y + size);
-                this.ctx.lineTo(x + size, y + size);
-                this.ctx.closePath();
-                break;
-            case 'square':
-                this.ctx.rect(x - size, y - size, size * 2, size * 2);
-                break;
-            case 'diamond':
-                this.ctx.moveTo(x, y - size);
-                this.ctx.lineTo(x + size, y);
-                this.ctx.lineTo(x, y + size);
-                this.ctx.lineTo(x - size, y);
-                this.ctx.closePath();
-                break;
-            case 'circle':
-                this.ctx.arc(x, y, size, 0, 2 * Math.PI);
-                break;
-            default:
-                this.ctx.rect(x - size, y - size, size * 2, size * 2);
-                break;
-        }
-        
-        this.ctx.fill();
     }
     
     drawBlock(block) {
@@ -830,106 +681,10 @@ export class CanvasRenderer {
         
         
         // Draw event indicators (within transformation context)
-        this.drawEventIndicators(block);
         
         this.ctx.restore();
     }
     
-    drawBlockProcessor() {
-        const nowPosition = this.canvas.width * 0.725;
-        const boxWidth = 180;
-        const boxHeight = 120;
-        const boxX = nowPosition - boxWidth / 2;
-        const boxY = 230;
-
-        this.ctx.save();
-
-        // Draw the main box
-        this.ctx.fillStyle = 'rgba(25, 177, 123, 0.1)';
-        this.ctx.strokeStyle = '#19b17b';
-        this.ctx.lineWidth = 1;
-        this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-        this.ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-
-        // Draw title
-        this.ctx.fillStyle = '#19b17b';
-        this.ctx.font = 'bold 14px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Block Processor', nowPosition, boxY + 20);
-
-        // State machine diagram elements
-        const states = {
-            pending: { x: boxX + 40, y: boxY + 50, label: 'A\'' },
-            processing: { x: boxX + 140, y: boxY + 50, label: 'B' },
-            toSql: { x: boxX + 40, y: boxY + 100, label: 'C' },
-            toPaima: { x: boxX + 140, y: boxY + 100, label: 'D' }
-        };
-
-        const { isAnimating, highlightedStateKey, highlightedArrowKey } = this.engine.blockProcessor;
-
-        // Draw states (circles)
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = '10px Arial';
-        Object.entries(states).forEach(([key, state]) => {
-            this.ctx.beginPath();
-            this.ctx.arc(state.x, state.y, 15, 0, 2 * Math.PI);
-            this.ctx.fillStyle = '#2a2a2a';
-            this.ctx.fill();
-
-            if (isAnimating && key === highlightedStateKey) {
-                this.ctx.strokeStyle = '#3498db';
-                this.ctx.lineWidth = 2;
-            } else {
-                this.ctx.strokeStyle = '#19b17b';
-                this.ctx.lineWidth = 1;
-            }
-            this.ctx.stroke();
-
-            if (isAnimating && key === highlightedStateKey) {
-                this.ctx.fillStyle = '#3498db';
-            } else {
-                this.ctx.fillStyle = '#fff';
-            }
-            this.ctx.fillText(state.label, state.x, state.y + 5);
-        });
-
-        // Draw arrows
-        this.drawArrow(states.pending, states.processing, isAnimating && highlightedArrowKey && highlightedArrowKey[0] === 'pending' && highlightedArrowKey[1] === 'processing');
-        this.drawArrow(states.processing, states.toSql, isAnimating && highlightedArrowKey && highlightedArrowKey[0] === 'processing' && highlightedArrowKey[1] === 'toSql');
-        this.drawArrow(states.processing, states.toPaima, isAnimating && highlightedArrowKey && highlightedArrowKey[0] === 'processing' && highlightedArrowKey[1] === 'toPaima');
-
-        this.ctx.restore();
-    }
-
-    drawArrow(from, to, isHighlighted = false) {
-        const headlen = 10; // length of head in pixels
-        const dx = to.x - from.x;
-        const dy = to.y - from.y;
-        const angle = Math.atan2(dy, dx);
-
-        // Adjust start and end points to be on the edge of the circles
-        const startX = from.x + 15 * Math.cos(angle);
-        const startY = from.y + 15 * Math.sin(angle);
-        const endX = to.x - 15 * Math.cos(angle);
-        const endY = to.y - 15 * Math.sin(angle);
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(startX, startY);
-        this.ctx.lineTo(endX, endY);
-        this.ctx.lineTo(endX - headlen * Math.cos(angle - Math.PI / 6), endY - headlen * Math.sin(angle - Math.PI / 6));
-        this.ctx.moveTo(endX, endY);
-        this.ctx.lineTo(endX - headlen * Math.cos(angle + Math.PI / 6), endY - headlen * Math.sin(angle + Math.PI / 6));
-
-        if (isHighlighted) {
-            this.ctx.strokeStyle = '#3498db';
-            this.ctx.lineWidth = 2;
-        } else {
-            this.ctx.strokeStyle = '#19b17b';
-            this.ctx.lineWidth = 1;
-        }
-        this.ctx.stroke();
-    }
-
     render() {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -959,11 +714,11 @@ export class CanvasRenderer {
         });
         
         // Draw Block Processor
-        this.drawBlockProcessor();
+        this.engine.blockProcessor.draw(this.ctx);
 
         // Draw Batcher and User Devices
         if (this.engine.batcher) {
-            this.drawBatcher(this.engine.batcher);
+            this.engine.batcher.draw(this.ctx);
         }
         
         // Define user device area and box
@@ -999,11 +754,11 @@ export class CanvasRenderer {
         this.ctx.restore();
 
         this.engine.userDevices.forEach(device => {
-            this.drawUserDevice(device);
+            device.draw(this.ctx);
         });
 
         // Draw event legend
-        this.drawEventLegend();
+        this.eventLegend.draw(this.ctx, this.engine.eventParticles);
         
         // Draw NOW line
         this.drawNowLine();
@@ -1016,7 +771,7 @@ export class CanvasRenderer {
         
         // Draw all actions
         this.engine.actions.forEach(action => {
-            this.drawAction(action);
+            action.draw(this.ctx);
         });
         
         // Draw all blockchains
@@ -1027,13 +782,13 @@ export class CanvasRenderer {
             
             // Draw all blocks if they exist
             blockchain.blocks.forEach(block => {
-                this.drawBlock(block);
+                block.draw(this.ctx);
             });
         });
         
         // Draw processed events so they appear on top of blocks
         this.engine.processedEvents.forEach(pe => {
-            this.drawProcessedEvent(pe);
+            pe.draw(this.ctx);
         });
 
         // Draw event particles
@@ -1042,16 +797,16 @@ export class CanvasRenderer {
         });
         
         this.engine.userRequestParticles.forEach(particle => {
-            this.drawUserRequestParticle(particle);
+            particle.draw(this.ctx);
         });
 
         this.engine.blockProcessorParticles.forEach(particle => {
-            this.drawBlockProcessorParticle(particle);
+            particle.draw(this.ctx);
         });
 
         // Draw batcher particles
         this.engine.batcherParticles.forEach(particle => {
-            this.drawBatcherParticle(particle);
+            particle.draw(this.ctx);
         });
 
         // Draw current status
@@ -1084,68 +839,6 @@ export class CanvasRenderer {
         this.ctx.fillText('NOW', nowPosition, this.canvas.height - 20);
     }
     
-    drawProcessedEvent(pe) {
-        this.ctx.save();
-        this.ctx.globalAlpha = pe.alpha;
-        this.ctx.fillStyle = pe.color;
-        this.ctx.beginPath();
-        this.ctx.arc(pe.x, pe.y, pe.radius, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.restore();
-    }
-
-    drawEventLegend() {
-        const width = 130;
-        const legendX = this.canvas.width - 165 // Position near right edge
-        const legendY = this.canvas.height - 120; // Position near bottom
-        const dotSize = 4;
-        const lineHeight = 16;
-        
-        // Event type colors and labels
-        const eventTypes = [
-            { type: 'erc20_transfer', color: '#f39c12', label: 'ERC20 Transfer' },
-            { type: 'erc721_transfer', color: '#9b59b6', label: 'ERC721 Transfer' },
-            { type: 'game_move', color: '#3498db', label: 'Game Move' },
-            { type: 'account_created', color: '#2ecc71', label: 'Account Created' }
-        ];
-        
-        // Draw legend background
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(legendX - 10, legendY - 15, width, 90);
-        
-        // Draw legend border
-        this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(legendX - 10, legendY - 15, width, 90);
-        
-        // Draw legend title
-        this.ctx.fillStyle = '#ccc';
-        this.ctx.font = 'bold 10px Arial';
-        this.ctx.textAlign = 'left';
-        this.ctx.fillText('Event Types:', legendX, legendY);
-        
-        // Draw legend items
-        eventTypes.forEach((item, index) => {
-            const itemY = legendY + 15 + (index * lineHeight);
-            
-            // Draw colored dot
-            this.ctx.fillStyle = item.color;
-            this.ctx.beginPath();
-            this.ctx.arc(legendX + 5, itemY - 3, dotSize / 2, 0, 2 * Math.PI);
-            this.ctx.fill();
-            
-            // Draw dot border
-            this.ctx.strokeStyle = '#000';
-            this.ctx.lineWidth = 1;
-            this.ctx.stroke();
-            
-            // Draw label
-            this.ctx.fillStyle = '#aaa';
-            this.ctx.font = '9px Arial';
-            this.ctx.fillText(item.label, legendX + 12, itemY);
-        });
-    }
-    
     start() {
         this.render();
     }
@@ -1157,64 +850,4 @@ export class CanvasRenderer {
         }
     }
 
-    drawBatcher(batcher) {
-        this.ctx.save();
-        this.ctx.fillStyle = batcher.color;
-        this.ctx.fillRect(batcher.x, batcher.y, batcher.width, batcher.height);
-        this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(batcher.x, batcher.y, batcher.width, batcher.height);
-
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 14px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Batcher', batcher.x + batcher.width / 2, batcher.y + 20);
-        this.ctx.font = '12px Arial';
-        this.ctx.fillText(`Processed: ${batcher.requestsReceived}`, batcher.x + batcher.width / 2, batcher.y + 40);
-        this.ctx.restore();
-    }
-
-    drawUserDevice(device) {
-        this.ctx.save();
-        this.ctx.globalAlpha = device.opacity;
-        this.ctx.fillStyle = device.color;
-        this.ctx.beginPath();
-        this.ctx.arc(device.x, device.y, device.radius, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.restore();
-    }
-
-    drawUserRequestParticle(particle) {
-        this.ctx.save();
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.beginPath();
-        this.ctx.arc(particle.currentX, particle.currentY, 2, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.restore();
-    }
-
-    drawBlockProcessorParticle(particle) {
-        this.ctx.save();
-        this.ctx.fillStyle = '#f39c12'; // A different color to distinguish
-        this.ctx.beginPath();
-        this.ctx.arc(particle.currentX, particle.currentY, 3, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.restore();
-    }
-
-    drawBatcherParticle(particle) {
-        if (!particle.isActive) return;
-        this.ctx.save();
-        this.ctx.globalAlpha = particle.opacity || 1.0;
-        this.ctx.fillStyle = particle.color;
-        this.ctx.beginPath();
-        this.ctx.arc(particle.currentX, particle.currentY, 3, 0, 2 * Math.PI); // A bit larger
-        
-        // Add a glow
-        this.ctx.shadowColor = particle.color;
-        this.ctx.shadowBlur = 8;
-        this.ctx.fill();
-
-        this.ctx.restore();
-    }
 }

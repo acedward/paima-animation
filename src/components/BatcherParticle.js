@@ -1,4 +1,5 @@
 import { blockHeight } from '../config.js';
+import { EventTypes, EventColors } from './EventTypes.js';
 
 export class BatcherParticle {
     constructor(startX, startY, targetChain, event, engine, duration = 1000) {
@@ -17,13 +18,7 @@ export class BatcherParticle {
         
         this.state = 'TRAVELING_TO_WAIT_POINT'; // TRAVELING_TO_WAIT_POINT, WAITING
         
-        const eventColors = {
-            'erc20_transfer': '#f39c12',
-            'erc721_transfer': '#9b59b6',
-            'game_move': '#3498db',
-            'account_created': '#2ecc71'
-        };
-        this.color = eventColors[event.type] || '#e67e22';
+        this.color = EventColors[event.type] || '#e67e22';
         this.opacity = 1.0;
     }
 
@@ -53,5 +48,21 @@ export class BatcherParticle {
             this.currentX = waitPositionX;
             this.currentY = targetY;
         }
+    }
+
+    draw(ctx) {
+        if (!this.isActive) return;
+        ctx.save();
+        ctx.globalAlpha = this.opacity || 1.0;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.currentX, this.currentY, 3, 0, 2 * Math.PI); // A bit larger
+        
+        // Add a glow
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+
+        ctx.restore();
     }
 }

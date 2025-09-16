@@ -1,4 +1,5 @@
 import { baseBlockWidth, blockHeight } from '../config.js';
+import { EventTypes, EventColors } from './EventTypes.js';
 
 export class Block {
     constructor(x, y, color, index, width = baseBlockWidth, height = blockHeight, speed = 0, startTime = 0, endTime = 0, blockchain = null) {
@@ -131,5 +132,103 @@ export class Block {
         const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * progress);
         
         return rgbToHex(r, g, b);
+    }
+
+    draw(ctx) {
+        ctx.save();
+        
+        ctx.globalAlpha = this.opacity;
+        
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        ctx.scale(this.scale, this.scale);
+        ctx.translate(-this.width/2, -this.height/2);
+        
+        // Draw block shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(2, 2, this.width, this.height);
+        
+        // Draw main block - use interpolated color during merge animation
+        let currentColor = this.color;
+        if (this.colorAnimation && this.colorAnimation.isAnimating) {
+            currentColor = this.colorAnimation.currentColor;
+            this.color = currentColor;
+        }
+        ctx.fillStyle = currentColor;
+        ctx.fillRect(0, 0, this.width, this.height);
+        
+        // Draw block border
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, this.width, this.height);
+        
+        // Always draw block number and timing info
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        
+        if (this.width >= 60) {
+            // Full info for wider blocks
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText("#" + this.index, this.width/2, this.height/2 - 8);
+            
+            // Show duration below block number
+            ctx.font = '10px Arial';
+            ctx.fillText(`${(this.duration / 1000).toFixed(1)}s`, this.width/2, this.height/2 + 2);
+            
+            const eventCount = this.events.length + (this.accumulatedEvents || []).reduce((sum, pe) => sum + (pe.events ? pe.events.length : 0), 0);
+            // Show event data info if block has events
+            if (eventCount > 0) {
+                ctx.font = 'bold 8px Arial';
+                ctx.fillStyle = '#ffeb3b'; // Yellow for visibility
+                ctx.fillText(`${eventCount} event${eventCount !== 1 ? 's' : ''}`, this.width/2, this.height/2 + 12);
+            }
+        } else if (this.width >= 30) {
+            // Medium blocks - show number and duration
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText("#" + this.index, this.width/2, this.height/2 - 8);
+            ctx.font = '8px Arial';
+            ctx.fillText(`${(this.duration / 1000).toFixed(1)}s`, this.width/2, this.height/2 + 8);
+        } else {
+            // Narrow blocks - just show block number
+            ctx.font = 'bold 9px Arial';
+            ctx.fillText("#" + this.index, this.width/2, this.height/2);
+        }
+        
+        
+        // Draw event indicators (within transformation context)
+        this._drawEventIndicators(ctx);
+        
+        ctx.restore();
+    }
+
+    _drawEventIndicators(ctx) {
+        const allEvents = [...this.events, ...(this.accumulatedEvents || []).flatMap(pe => pe.events || [])];
+        if (allEvents.length === 0) return;
+        
+        // Only draw if block is wide enough
+        if (this.width < 30) return;
+        
+        // Draw event indicators at the same positions where particles will land
+        const dotSize = 3;
+        
+        if (this.blockchain.name === 'Paima Engine') return;
+        allEvents.forEach((event, index) => {
+            // Same positioning as particles: x=10, x=20, x=30, etc.
+            const eventX = 10 + (index * 10);
+            const eventY = 15; // 15px from top of block
+            
+            // Don't draw if it would go outside the block
+            if (eventX + 5 > this.width) return; // Leave margin at right edge
+            
+            // Draw event indicator dot
+            ctx.fillStyle = EventColors[event.type] || '#fff';
+            ctx.beginPath();
+            ctx.arc(eventX, eventY, dotSize / 2, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw small border around dot
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        });
     }
 }

@@ -23,24 +23,41 @@ export class EventLegend {
         return this.eventColorMap[eventName] || '#ffffff';
     }
 
-    draw(ctx) {
+    draw(ctx, eventParticles) {
+        // Automatically add new event types from particles
+        eventParticles.forEach(particle => {
+            this.addEventType(particle.event.type);
+        });
+
         const legendX = this.x;
         const legendY = this.y;
         const itemHeight = 20;
         const padding = 10;
+        const width = 130;
 
-        ctx.font = '12px Arial';
+        // Draw legend background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(legendX - 10, legendY - 15, width, this.events.length * itemHeight + 30);
+        
+        // Draw legend border
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(legendX - 10, legendY - 15, width, this.events.length * itemHeight + 30);
+
+        ctx.font = 'bold 10px Arial';
         ctx.fillStyle = 'white';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
+        ctx.fillText('Event Types:', legendX, legendY);
         
         this.events.forEach((event, index) => {
-            const yPos = legendY + index * itemHeight;
+            const yPos = legendY + 20 + index * itemHeight;
             
             ctx.fillStyle = event.color;
             ctx.fillRect(legendX, yPos - 5, 10, 10);
             
             ctx.fillStyle = 'white';
+            ctx.font = '9px Arial';
             ctx.fillText(event.name, legendX + 20, yPos);
         });
     }

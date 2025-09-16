@@ -30,4 +30,13 @@ export class UserRequestParticle {
             }
         }
     }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(this.currentX, this.currentY, 2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore();
+    }
 }

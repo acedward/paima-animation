@@ -1,3 +1,5 @@
+import { EventTypes, EventColors } from './EventTypes.js';
+
 export class EventParticle {
     constructor(startX, startY, endX, endY, event, targetBlock, index, duration = 2000) {
         this.startX = startX;
@@ -21,14 +23,6 @@ export class EventParticle {
         // Calculate offset from block position
         this.offsetX = endX - targetBlock.x; // Offset from block's left edge
         this.offsetY = endY - targetBlock.y; // Offset from block's top edge
-        
-        // Event type colors
-        this.eventColors = {
-            'erc20_transfer': '#f39c12',
-            'erc721_transfer': '#9b59b6',
-            'game_move': '#3498db',
-            'account_created': '#2ecc71'
-        };
     }
 
     startFadingOut() {
@@ -87,7 +81,7 @@ export class EventParticle {
         ctx.globalAlpha = this.opacity;
         
         // Draw event particle as a small glowing circle
-        const color = this.eventColors[this.event.type] || '#fff';
+        const color = EventColors[this.event.type] || '#fff';
         
         // Different rendering based on state
         if (this.hasReached) {
