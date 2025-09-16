@@ -1,3 +1,5 @@
+import { randomMultipliers } from '../random.js';
+
 // Calculate block width based on timing
 export function getBlockWidth(timingMs) {
     return baseBlockWidth * (timingMs / baseTimingMs);
@@ -14,26 +16,26 @@ export function generateRandomAddress() {
 }
 
 export function generateRandomBalance() {
-    return (Math.random() * 1000).toFixed(2);
+    return (Math.random() * randomMultipliers.generateRandomBalance).toFixed(2);
 }
 
 export function generateRandomUserId() {
-    return Math.floor(Math.random() * 999) + 1;
+    return Math.floor(Math.random() * randomMultipliers.generateRandomUserId) + 1;
 }
 
 export function generateRandomPosition() {
     return {
-        x: Math.floor(Math.random() * 10),
-        y: Math.floor(Math.random() * 10)
+        x: Math.floor(Math.random() * randomMultipliers.generateRandomPosition),
+        y: Math.floor(Math.random() * randomMultipliers.generateRandomPosition)
     };
 }
 
 export function generateRandomCharacterId() {
-    return Math.floor(Math.random() * 5) + 1;
+    return Math.floor(Math.random() * randomMultipliers.generateRandomCharacterId) + 1;
 }
 
 export function generateRandomAssetId() {
-    return Math.floor(Math.random() * 9999) + 1;
+    return Math.floor(Math.random() * randomMultipliers.generateRandomAssetId) + 1;
 }
 
 // Generate blockchain events

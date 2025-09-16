@@ -7,11 +7,12 @@ import { BlockProcessorParticle } from './BlockProcessorParticle.js';
 import { EventParticle } from './EventParticle.js';
 import { ProcessedEvent } from './ProcessedEvent.js';
 import { UserDevice } from './UserDevice.js';
+import { randomMultipliers } from '../random.js';
 
 export class BlockchainEngine {
     _createNewUserDevice() {
-        const x = this.canvasWidth * 0.87 + Math.random() * 80; // Right side of the screen
-        const y = Math.random() * 80 + this.canvasHeight * 0.7; // Spread vertically
+        const x = this.canvasWidth * 0.87 + Math.random() * randomMultipliers.userDeviceCreationPosition; // Right side of the screen
+        const y = Math.random() * randomMultipliers.userDeviceCreationPosition + this.canvasHeight * 0.7; // Spread vertically
         const deviceName = `User ${this.userDeviceCounter++}`;
         return new UserDevice(x, y, deviceName);
     }
@@ -417,7 +418,7 @@ export class BlockchainEngine {
         const currentTime = this.getCurrentTime();
         
         // Schedule action in the future with random interval (0.5-3 seconds from now)
-        const randomDelay = Math.random() * 2500 + 500; // 500ms to 3000ms
+        const randomDelay = Math.random() * randomMultipliers.actionCreationDelay.multiplier + randomMultipliers.actionCreationDelay.offset; // 500ms to 3000ms
         const futureTime = currentTime + randomDelay;
         
         // Calculate initial position (will be updated in update loop)
@@ -498,14 +499,14 @@ export class BlockchainEngine {
         // Update table blinking
         this.updateTableBlinking();
 
-        if (Math.random() < this.blockProcessorToBatcherChance) {
+        if (Math.random() < randomMultipliers.blockProcessorToBatcherChance) {
             this.blockProcessorSendsEventToBatcher();
         }
         
         // Handle device lifecycle
         if (Date.now() > this.nextDeviceCheck) {
             // Attempt to remove a device
-            if (this.userDevices.length > this.minUserDevices && Math.random() < 0.5) {
+            if (this.userDevices.length > this.minUserDevices && Math.random() < randomMultipliers.deviceRemovalChance) {
                 const activeDevices = this.userDevices.filter(d => d.state === 'ACTIVE');
                 if (activeDevices.length > 0) {
                     const deviceToDisappear = activeDevices[Math.floor(Math.random() * activeDevices.length)];
@@ -514,7 +515,7 @@ export class BlockchainEngine {
             }
     
             // Attempt to add a device
-            if (this.userDevices.length < this.maxUserDevices && Math.random() < 0.5) {
+            if (this.userDevices.length < this.maxUserDevices && Math.random() < randomMultipliers.deviceAdditionChance) {
                 this.userDevices.push(this._createNewUserDevice());
             }
     

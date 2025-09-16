@@ -1,4 +1,5 @@
 import { UserRequestParticle } from './UserRequestParticle.js';
+import { randomMultipliers } from '../random.js';
 
 export class UserDevice {
     constructor(x, y, name = 'User') {
@@ -8,7 +9,7 @@ export class UserDevice {
         this.color = '#ffffff';
         this.name = name;
         this.lastRequestTime = Date.now();
-        this.requestInterval = Math.random() * 4000 + 1000;
+        this.requestInterval = Math.random() * randomMultipliers.userDeviceRequestInterval.multiplier + randomMultipliers.userDeviceRequestInterval.offset;
 
         this.state = 'FADING_IN'; // FADING_IN, ACTIVE, FADING_OUT
         this.opacity = 0;
@@ -37,7 +38,7 @@ export class UserDevice {
         // Only send requests if active
         if (this.state === 'ACTIVE' && now - this.lastRequestTime > this.requestInterval) {
             this.lastRequestTime = now;
-            this.requestInterval = Math.random() * 4000 + 1000;
+            this.requestInterval = Math.random() * randomMultipliers.userDeviceRequestInterval.multiplier + randomMultipliers.userDeviceRequestInterval.offset;
             
             if (engine.batcher) {
                 const particle = new UserRequestParticle(

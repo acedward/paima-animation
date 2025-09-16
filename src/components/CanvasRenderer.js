@@ -1,6 +1,7 @@
 import { BlockchainEngine } from './BlockchainEngine.js';
 import { tableConfig } from '../config.js';
 import { Block } from './Block.js';
+import { randomMultipliers } from '../random.js';
 // Enhanced UI Controller with dynamic chain management and tooltips
 export class CanvasRenderer {
     constructor(canvasId) {
@@ -33,6 +34,7 @@ export class CanvasRenderer {
         this.initializeTooltips();
         this.updateChainList();
         this.updatePresetButtons();
+        this.initializeConfigModal();
         
         // Schedule automatic chain additions
         this.scheduleChainAdditions();
@@ -97,6 +99,13 @@ export class CanvasRenderer {
     }
     
     initializeUI() {
+        const toggleConfigBtn = document.getElementById('toggleConfigBtn');
+        const controls = document.querySelector('.controls');
+
+        toggleConfigBtn.addEventListener('click', () => {
+            controls.classList.toggle('hidden');
+        });
+
         const addChainBtn = document.getElementById('addChainBtn');
         const chainNameInput = document.getElementById('chainName');
         const blockTimeInput = document.getElementById('blockTime');
@@ -166,6 +175,83 @@ export class CanvasRenderer {
                 }
             });
         });
+    }
+
+    initializeConfigModal() {
+        const modal = document.getElementById('configModal');
+        const configBtn = document.getElementById('configBtn');
+        const closeBtn = document.getElementById('closeConfigModal');
+        const saveBtn = document.getElementById('saveConfigBtn');
+        const form = document.getElementById('configForm');
+
+        configBtn.addEventListener('click', () => {
+            this.populateConfigForm();
+            modal.style.display = 'block';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        saveBtn.addEventListener('click', () => {
+            this.saveConfigForm();
+            modal.style.display = 'none';
+        });
+    }
+
+    populateConfigForm() {
+        const form = document.getElementById('configForm');
+        form.innerHTML = '';
+        for (const key in randomMultipliers) {
+            const value = randomMultipliers[key];
+            if (typeof value === 'object') {
+                for (const subKey in value) {
+                    const id = `${key}.${subKey}`;
+                    const labelText = `${key} (${subKey})`;
+                    this.createFormElement(form, id, labelText, value[subKey]);
+                }
+            } else {
+                this.createFormElement(form, key, key, value);
+            }
+        }
+    }
+
+    createFormElement(form, id, labelText, value) {
+        const label = document.createElement('label');
+        label.setAttribute('for', id);
+        label.textContent = labelText.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        
+        const input = document.createElement('input');
+        input.setAttribute('type', 'number');
+        input.setAttribute('id', id);
+        input.setAttribute('name', id);
+        input.setAttribute('value', value);
+        input.setAttribute('step', 'any');
+
+        form.appendChild(label);
+        form.appendChild(input);
+    }
+
+    saveConfigForm() {
+        const form = document.getElementById('configForm');
+        const inputs = form.elements;
+        for (let i = 0; i < inputs.length; i++) {
+            const input = inputs[i];
+            if (input.name) {
+                const keys = input.name.split('.');
+                if (keys.length === 2) {
+                    randomMultipliers[keys[0]][keys[1]] = parseFloat(input.value);
+                } else {
+                    randomMultipliers[keys[0]] = parseFloat(input.value);
+                }
+            }
+        }
     }
     
     initializeTooltips() {
@@ -278,7 +364,7 @@ export class CanvasRenderer {
         if (bp && x >= bp.x && x <= bp.x + bp.width && y >= bp.y && y <= bp.y + bp.height) {
             return {
                 title: 'Block Processor',
-                content: 'Processes events from merged blocks and routes them to SQL tables or Paima Engine.',
+                content: 'Processes events from merged blocks, validates and transforms contents into SQL data and generates Paima L2 Blocks.',
                 data: `Status: ${bp.isAnimating ? 'Animating' : 'Idle'}`
             };
         }
@@ -504,12 +590,20 @@ export class CanvasRenderer {
                     <div class="chain-timing">Block time: ${timeDisplay} | Blocks: ${chain.blocks.length}</div>
                 </div>
                 ${chain.id !== 'paima-engine' ? 
-                    `<button class="remove-btn" onclick="renderer.removeChain('${chain.id}')">Remove</button>` : 
+                    `<button class="remove-btn" data-chain-id="${chain.id}">Remove</button>` : 
                     '<div style="color: #19b17b; font-size: 12px; font-weight: bold;">ALWAYS ON</div>'
                 }
             `;
             
             chainList.appendChild(chainItem);
+
+            const removeBtn = chainItem.querySelector('.remove-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', (event) => {
+                    const chainId = event.target.getAttribute('data-chain-id');
+                    this.removeChain(chainId);
+                });
+            }
         });
     }
     

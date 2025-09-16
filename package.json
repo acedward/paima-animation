@@ -4,6 +4,7 @@
   "description": "A blockchain animation engine demonstrating Paima Engine's multi-chain merging capabilities",
   "main": "blockchain-engine.js",
   "scripts": {
+    "start": "npx http-server ."
   },
   "keywords": [
     "blockchain",
