@@ -1,5 +1,6 @@
 import { actionConfig } from '../config.js';
 
+// This Class is also known as ScheduledEvent
 export class Action {
     constructor(x, y, scheduledTime, index, block) {
         this.x = x;
@@ -226,7 +227,7 @@ export class Action {
         if (this.isTravelingToTable) status = 'Traveling to table';
         
         return {
-            title: `Action #${this.index}`,
+            title: `Scheduled Event #${this.index}`,
             content: `Status: ${status}<br>
                      Events: ${this.events.length}<br>
                      ${this.targetTable ? `Target: ${this.targetTable.name}` : ''}`,

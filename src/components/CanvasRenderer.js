@@ -292,7 +292,7 @@ export class CanvasRenderer {
         }
         
         // Check actions
-        for (let action of this.engine.actions) {
+        for (let action of this.engine.scheduledEvents.actions) {
             if (action.isInside(x, y)) {
                 return action.getTooltipData(this.engine.engineStartTime);
             }
@@ -309,6 +309,11 @@ export class CanvasRenderer {
         const bp = this.engine.blockProcessor;
         if (bp && bp.isInside(x, y)) {
             return bp.getTooltipData();
+        }
+
+        const se = this.engine.scheduledEvents;
+        if (se && se.isInside(x, y)) {
+            return se.getTooltipData();
         }
 
         // Check Batcher
@@ -349,7 +354,7 @@ export class CanvasRenderer {
                 });
                 
                 // Adjust all action timings
-                this.engine.actions.forEach(action => {
+                this.engine.scheduledEvents.actions.forEach(action => {
                     if (action.travelStartTime) action.travelStartTime += pauseDuration;
                     if (action.waitStartTime) action.waitStartTime += pauseDuration;
                     if (action.fadeStartTime) action.fadeStartTime += pauseDuration;
@@ -557,6 +562,10 @@ export class CanvasRenderer {
         // Draw Block Processor
         this.engine.blockProcessor.draw(this.ctx);
 
+        if (this.engine.scheduledEvents) {
+            this.engine.scheduledEvents.draw(this.ctx);
+        }
+
         // Draw Batcher and User Devices
         if (this.engine.batcher) {
             this.engine.batcher.draw(this.ctx);
@@ -573,15 +582,10 @@ export class CanvasRenderer {
         
         // Draw NOW line
         this.drawNowLine();
-        
-        // Draw title for Scheduled Events
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = 'bold 16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Scheduled Events', this.canvas.width * 0.9, 255);
+
         
         // Draw all actions
-        this.engine.actions.forEach(action => {
+        this.engine.scheduledEvents.actions.forEach(action => {
             action.draw(this.ctx);
         });
         

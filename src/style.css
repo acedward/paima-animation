@@ -404,9 +404,9 @@ canvas {
 }
 
 .toggle-config-btn {
-    position: fixed;
+    position: absolute;
     top: 20px;
-    right: 20px;
+    right: 100px;
     background: none;
     border: none;
     color: #018010a0;

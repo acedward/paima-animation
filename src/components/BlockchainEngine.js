@@ -15,6 +15,7 @@ import { Table } from './Table.js';
 import { BlockProcessor } from './BlockProcessor.js';
 import { EventTypes, processEvent } from './EventTypes.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
+import { ScheduledEvents } from './ScheduledEvents.js';
 
 export class BlockchainEngine {
     constructor(canvasWidth = 1200, canvasHeight = 1000) {
@@ -23,7 +24,6 @@ export class BlockchainEngine {
         this.blockCount = 0;
         this.lastFrameTime = Date.now();
         this.eventParticles = []; // Track animated event particles
-        this.actions = []; // Track scheduled actions
         this.processedEvents = []; // Track events after processing
         this.actionCounter = 0; // Track action numbering
         this.currentMergeColorIndex = 0;
@@ -36,6 +36,7 @@ export class BlockchainEngine {
         this.blockProcessorToBatcherChance = 0.005;
 
         this.blockProcessor = new BlockProcessor(this.canvasWidth * 0.805);
+        this.scheduledEvents = new ScheduledEvents(this.canvasWidth * 0.810, this.canvasHeight * 0.23);
         
         // Time tracking - starts at 0 when engine initializes
         this.engineStartTime = Date.now();
@@ -172,7 +173,7 @@ export class BlockchainEngine {
         // Associate the event with this action
         action.events.push(event);
         
-        this.actions.push(action);
+        this.scheduledEvents.addAction(action);
         return action;
     }
     
@@ -301,7 +302,7 @@ export class BlockchainEngine {
         this.processedEvents = this.processedEvents.filter(pe => pe.isActive);
         
         // Update actions and handle execution
-        this.actions.forEach(action => {
+        this.scheduledEvents.actions.forEach(action => {
             const actionResult = action.update(currentEngineTime);
             if (actionResult) {
                 if (typeof actionResult === 'object' && actionResult.readyToTravel) {
@@ -331,8 +332,8 @@ export class BlockchainEngine {
         });
         
         // Remove actions that have completed their journey and clean up related particles
-        const removedActions = this.actions.filter(action => !action.isActive);
-        this.actions = this.actions.filter(action => action.isActive);
+        const removedActions = this.scheduledEvents.actions.filter(action => !action.isActive);
+        this.scheduledEvents.actions = this.scheduledEvents.actions.filter(action => action.isActive);
         
         // Clean up event particles that were targeting removed actions
         if (removedActions.length > 0) {
@@ -395,7 +396,7 @@ export class BlockchainEngine {
         });
         
         // Position actions based on their scheduled time (only if not traveling or waiting)
-        this.actions.forEach(action => {
+        this.scheduledEvents.actions.forEach(action => {
             if (!action.isTravelingToTable && !action.isWaitingAtNow) {
                 const timeUntilExecution = action.scheduledTime - currentEngineTime;
                 const timeOffset = timeUntilExecution * pixelsPerSecond / 1000;
@@ -459,10 +460,10 @@ export class BlockchainEngine {
         const particleStatus = this.eventParticles.length > 0 ? 
             `| ${movingParticles} moving, ${reachedParticles} at actions` : '';
         
-        const scheduledActions = this.actions.filter(a => !a.isExecuted && !a.isTravelingToTable && !a.isWaitingAtNow).length;
-        const waitingActions = this.actions.filter(a => a.isWaitingAtNow).length;
-        const travelingActions = this.actions.filter(a => a.isTravelingToTable).length;
-        const totalActions = this.actions.length;
+        const scheduledActions = this.scheduledEvents.actions.filter(a => !a.isExecuted && !a.isTravelingToTable && !a.isWaitingAtNow).length;
+        const waitingActions = this.scheduledEvents.actions.filter(a => a.isWaitingAtNow).length;
+        const travelingActions = this.scheduledEvents.actions.filter(a => a.isTravelingToTable).length;
+        const totalActions = this.scheduledEvents.actions.length;
         
         const actionStatus = totalActions > 0 ? 
             `| ${scheduledActions} scheduled, ${waitingActions} waiting, ${travelingActions} traveling` : '';
