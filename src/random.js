@@ -1,3 +1,12 @@
+/**
+ * @file random.js
+ * @description Defines multipliers and offsets for generating random values in the simulation.
+ * 
+ * This file centralizes the configuration for randomness in the animation. The `randomMultipliers`
+ * object contains parameters that control the range and frequency of various randomized
+ * events, such as generating balances, creating user devices, and scheduling actions.
+ * Adjusting these values can significantly alter the dynamics and behavior of the simulation.
+ */
 export let randomMultipliers = {
     generateRandomBalance: 1000,
     generateRandomUserId: 999,

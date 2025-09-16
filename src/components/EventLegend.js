@@ -1,3 +1,12 @@
+/**
+ * @class EventLegend
+ * @description Manages and displays a legend for the different event types in the animation.
+ * 
+ * This class is responsible for dynamically tracking the types of events that appear in the simulation
+ * and assigning a unique color to each. It then renders a legend on the canvas, showing the color-coded
+ * list of event types, which helps the user to visually identify the different kinds of events
+ * as they move across the screen.
+ */
 export class EventLegend {
     constructor(x, y) {
         this.x = x;

@@ -1,6 +1,14 @@
 import { blockHeight } from '../config.js';
 import { EventTypes, EventColors } from './EventTypes.js';
 
+/**
+ * @class BatcherParticle
+ * @description Represents a particle that travels from the batcher to a target blockchain in the animation.
+ * 
+ * This class manages the movement and state of a particle, which represents a batch of events.
+ * The particle moves from its starting point to a waiting position near the target chain, waits for a block,
+ * and then travels into the block. It's rendered as a colored circle with a glow effect.
+ */
 export class BatcherParticle {
     constructor(startX, startY, targetChain, event, engine, duration = 1000) {
         this.startX = startX;

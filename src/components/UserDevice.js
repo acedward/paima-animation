@@ -2,6 +2,14 @@ import { UserRequestParticle } from './UserRequestParticle.js';
 import { randomMultipliers } from '../random.js';
 import { blockHeight } from '../config.js';
 
+/**
+ * @class UserDevice
+ * @description Represents a user's device in the animation.
+ * 
+ * This class simulates a user device that periodically sends requests to either a batcher or a blockchain.
+ * It manages its own state, including fading in and out, and handles its own animations.
+ * The device is rendered as a circle on the canvas.
+ */
 export class UserDevice {
     constructor(x, y, name = 'User') {
         this.x = x;

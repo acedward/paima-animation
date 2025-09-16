@@ -5,6 +5,16 @@ import { randomMultipliers } from '../random.js';
 import { EventLegend } from './EventLegend.js';
 import { Chain } from './Chain.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
+
+/**
+ * @class CanvasRenderer
+ * @description The main controller for the blockchain animation.
+ * 
+ * This class orchestrates the entire visualization. It initializes the `BlockchainEngine`,
+ * handles all user interface interactions (such as adding/removing chains, pausing, and configuring settings),
+ * and manages the main rendering loop on the HTML5 canvas. It's also responsible for displaying tooltips
+ * and dynamically adding new blockchains to the simulation over time.
+ */
 // Enhanced UI Controller with dynamic chain management and tooltips
 export class CanvasRenderer {
     constructor(canvasId) {
@@ -52,7 +62,7 @@ export class CanvasRenderer {
             this.addChainProgrammatically('Cardano', 20);
             this.addChainProgrammatically('Midnight', 6);
             console.log('Added Cardano, Midnight blockchains');
-        }, 11400);
+        }, 9400);
 
         setTimeout(() => {
             this.addChainProgrammatically('Avail', 20);
@@ -551,7 +561,7 @@ export class CanvasRenderer {
         if (this.isPaused) {
             this.ctx.fillStyle = '#e74c3c';
             this.ctx.font = 'bold 18px Arial';
-            this.ctx.fillText('⏸️ PAUSED', this.canvas.width/2, 65);
+            this.ctx.fillText('⏸️ PAUSED', 80, 20);
         }
         
         // Draw SQL tables

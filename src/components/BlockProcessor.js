@@ -1,3 +1,12 @@
+/**
+ * @class BlockProcessor
+ * @description Represents the block processor in the animation, which processes events from merged blocks.
+ * 
+ * This class visualizes a state machine for block processing, including states for pending,
+ * processing, and outputting to SQL and Paima. It handles the drawing of the processor box,
+ * the states as circles, and the transitions as arrows. It also provides tooltip information
+ * about its status.
+ */
 export class BlockProcessor {
     constructor(nowPosition, canvasWidth, canvasHeight) {
         this.nowPosition = nowPosition;

@@ -1,3 +1,13 @@
+/**
+ * @file EventTypes.js
+ * @description Defines the types of events that can occur in the blockchain simulation,
+ * their corresponding colors for visualization, and the logic for processing these events.
+ * 
+ * This file serves as a central registry for event definitions and handling. The `EventTypes` object
+ * enumerates the possible event types, while `EventColors` maps these types to specific colors
+ * for easy identification in the animation. The `processEvent` function is the core logic that
+ * updates the appropriate SQL tables based on the type and data of an incoming event.
+ */
 export const EventTypes = {
     ERC20_TRANSFER: 'erc20_transfer',
     ERC721_TRANSFER: 'erc721_transfer',

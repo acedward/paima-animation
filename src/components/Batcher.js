@@ -1,6 +1,14 @@
 import { generateBlockchainEvent } from '../utils/helpers.js';
 import { BatcherParticle } from './BatcherParticle.js';
 
+/**
+ * @class Batcher
+ * @description Represents a batcher in the animation, which collects user requests and creates batched events.
+ * 
+ * This class is responsible for receiving requests, generating blockchain events from them,
+ * and creating `BatcherParticle` objects to send these events to the appropriate blockchains.
+ * It is rendered as a box on the canvas that displays the number of requests it has processed.
+ */
 export class Batcher {
     constructor(x, y) {
         this.x = x - 50;

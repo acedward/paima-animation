@@ -1,3 +1,11 @@
+/**
+ * @class BlockProcessorParticle
+ * @description Represents a particle traveling from the Block Processor to the Batcher.
+ * 
+ * This class animates a particle's movement between two fixed points: the Block Processor
+ * and the Batcher. It's a simple, fire-and-forget particle that deactivates itself upon
+ * reaching its destination, signaling that the batcher has received a new input.
+ */
 export class BlockProcessorParticle {
     constructor(startX, startY, endX, endY, duration = 1500) {
         this.startX = startX;

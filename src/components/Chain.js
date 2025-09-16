@@ -1,6 +1,14 @@
 import { blockHeight } from '../config.js';
 import { Block } from './Block.js';
 
+/**
+ * @class Chain
+ * @description Represents a blockchain in the animation.
+ * 
+ * This class manages the creation of blocks for a specific blockchain. It handles the timing of block creation,
+ * assigns waiting event particles to new blocks, and maintains the sequence of blocks in the chain.
+ * Each chain has a name and a position on the canvas, and it's responsible for drawing its own label.
+ */
 export class Chain {
     constructor(name, yPosition, timing, lastBlockEndTime) {
         this.name = name;

@@ -1,6 +1,14 @@
 import { UserDevice } from './UserDevice.js';
 import { randomMultipliers } from '../random.js';
 
+/**
+ * @class UserDevices
+ * @description Manages a collection of UserDevice objects in the animation.
+ * 
+ * This class is responsible for the lifecycle of user devices, including their creation,
+ * updates, and removal. It ensures that the number of devices stays within a defined range.
+ * It also draws a container box for the user devices on the canvas to visually group them.
+ */
 export class UserDevices {
     constructor(engine) {
         this.engine = engine;

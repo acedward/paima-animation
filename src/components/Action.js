@@ -1,5 +1,15 @@
 import { actionConfig } from '../config.js';
 
+/**
+ * @class Action
+ * @description Represents a scheduled event in the animation, which is triggered at a specific time.
+ * This class is also aliased as `ScheduledEvent`.
+ * 
+ * An `Action` is created from events within a block and is scheduled for future execution.
+ * It manages its own state, including waiting at the "NOW" line, transitioning its shape,
+ * and traveling to a target SQL table. It's responsible for its own rendering and for
+ * providing detailed tooltip information.
+ */
 // This Class is also known as ScheduledEvent
 export class Action {
     constructor(x, y, scheduledTime, index, block) {

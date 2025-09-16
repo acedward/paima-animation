@@ -1,3 +1,12 @@
+/**
+ * @class UserRequestParticle
+ * @description Represents a particle that visualizes a user request traveling to a target.
+ * 
+ * This class animates the movement of a small white particle from a user's device to its
+ * intended destination, which can be either the `Batcher` or a specific blockchain.
+ * The particle follows a simple trajectory and deactivates itself upon reaching the target,
+ * signifying the successful delivery of the request.
+ */
 export class UserRequestParticle {
     constructor(startX, startY, endX, endY, target, duration = 1500) {
         this.startX = startX;

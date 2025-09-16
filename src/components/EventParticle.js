@@ -1,5 +1,14 @@
 import { EventTypes, EventColors } from './EventTypes.js';
 
+/**
+ * @class EventParticle
+ * @description Represents a particle that visualizes an event traveling from a block to a scheduled action.
+ * 
+ * This class manages the animation and state of an event particle. It moves from a source block
+ * to a target `Action` (referred to as `targetBlock` in the code for legacy reasons). Once it reaches
+ * its destination, it follows the action and can pulse or fade out. The particle's appearance,
+ * including its color and glow, is determined by the type of event it represents.
+ */
 export class EventParticle {
     constructor(startX, startY, endX, endY, event, targetBlock, index, duration = 2000) {
         this.startX = startX;

@@ -17,6 +17,17 @@ import { EventTypes, processEvent } from './EventTypes.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
 import { ScheduledEvents } from './ScheduledEvents.js';
 
+/**
+ * @class BlockchainEngine
+ * @description The core logic engine for the blockchain animation.
+ * 
+ * This class manages the state and behavior of the entire simulation. It is responsible for:
+ * - Creating and managing blockchains, blocks, and events.
+ * - Handling the lifecycle of particles (user requests, event particles, etc.).
+ * - Orchestrating the flow of data from user devices to batchers, blockchains, the block processor, and finally to SQL tables.
+ * - Updating the positions and states of all animated objects.
+ * - Providing a status summary of the engine's current state.
+ */
 export class BlockchainEngine {
     constructor(canvasWidth = 1200, canvasHeight = 1000) {
         this.canvasWidth = canvasWidth;

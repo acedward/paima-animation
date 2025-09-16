@@ -1,6 +1,15 @@
 import { baseBlockWidth, blockHeight } from '../config.js';
 import { EventTypes, EventColors } from './EventTypes.js';
 
+/**
+ * @class Block
+ * @description Represents a single block in a blockchain for the animation.
+ * 
+ * This class is responsible for the visual representation of a block, including its appearance,
+ * animations (like fading in and color changes), and displaying information such as the block number,
+ * duration, and event indicators. It also handles the layout of accumulated events within the block.
+ * Blocks can be of variable width and contain multiple events.
+ */
 export class Block {
     constructor(x, y, color, index, width = baseBlockWidth, height = blockHeight, speed = 0, startTime = 0, endTime = 0, blockchain = null) {
         this.x = x;

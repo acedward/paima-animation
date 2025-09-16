@@ -1,5 +1,14 @@
 import { tableConfig } from '../config.js';
 
+/**
+ * @class Table
+ * @description Represents an SQL table in the animation.
+ * 
+ * This class is responsible for visualizing a database table, including its header,
+ * columns, and rows of data. It handles the display of data, with features like
+ * alternating row colors and highlighting the newest entry. It also has a blinking
+ * effect to indicate when it's being updated.
+ */
 export class Table {
     constructor(name, columns, x, y) {
         this.name = name;

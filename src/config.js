@@ -1,3 +1,13 @@
+/**
+ * @file config.js
+ * @description Defines configuration constants for the blockchain animation.
+ * 
+ * This file centralizes all the key parameters that control the appearance and
+ * behavior of the animation. It includes settings for block dimensions, colors,
+ * table layouts, and action properties. By modifying the values in this file,
+ * the overall look and feel of the simulation can be easily adjusted without
+ * changing the core logic.
+ */
 export const baseBlockWidth = 100; // Increased for better number visibility
 export const blockHeight = 40;
 export const blockSpacing = 2;

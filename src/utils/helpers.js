@@ -1,3 +1,11 @@
+/**
+ * @file helpers.js
+ * @description Provides a collection of utility functions for the blockchain animation.
+ * 
+ * This file includes helper functions for generating random sample data used throughout
+ * the simulation. These functions create randomized addresses, balances, user IDs, positions,
+ * and blockchain events, adding a dynamic and unpredictable element to the visualization.
+ */
 import { randomMultipliers } from '../random.js';
 import { EventTypes } from '../components/EventTypes.js';
 

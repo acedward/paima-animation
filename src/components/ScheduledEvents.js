@@ -1,3 +1,11 @@
+/**
+ * @class ScheduledEvents
+ * @description Represents a queue for scheduled events in the animation.
+ * 
+ * This class visualizes a box that holds scheduled events waiting to be processed.
+ * It's responsible for drawing the container, displaying the number of queued events,
+ * and providing methods to add and retrieve actions from the queue.
+ */
 export class ScheduledEvents {
     constructor(x, y) {
         this.width = 180;

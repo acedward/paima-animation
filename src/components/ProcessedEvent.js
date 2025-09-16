@@ -1,5 +1,14 @@
 import { Block } from './Block.js';
 
+/**
+ * @class ProcessedEvent
+ * @description Represents an event that has been processed by the `BlockProcessor` and is being animated towards its final destination.
+ * 
+ * This class manages the multi-stage journey of a processed event. It visualizes the event's
+ * path from an `Action` to the `BlockProcessor`, and then from the processor to either an
+ * SQL table or a Paima Engine block. The particle's movement is defined by a series of
+ * path segments with specific durations, creating a guided animation through the system.
+ */
 export class ProcessedEvent {
     constructor(action, target, engine, startPos = null) {
         this.engine = engine;
