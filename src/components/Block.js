@@ -1,5 +1,6 @@
 import { baseBlockWidth, blockHeight } from '../config.js';
 import { EventTypes, EventColors } from './EventTypes.js';
+import * as COLORS from '../colors.js';
 
 /**
  * @class Block
@@ -39,6 +40,15 @@ export class Block {
         };
     }
     
+    getBounds() {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height,
+        };
+    }
+
     update(deltaTime) {
         // Animate appearance
         if (this.opacity < 1) {
@@ -154,7 +164,7 @@ export class Block {
         ctx.translate(-this.width/2, -this.height/2);
         
         // Draw block shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillStyle = COLORS.BLACK;
         ctx.fillRect(2, 2, this.width, this.height);
         
         // Draw main block - use interpolated color during merge animation
@@ -167,7 +177,7 @@ export class Block {
         ctx.fillRect(0, 0, this.width, this.height);
         
         // Draw block border
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = COLORS.WHITE;
         ctx.lineWidth = 2;
         ctx.strokeRect(0, 0, this.width, this.height);
         
@@ -176,7 +186,7 @@ export class Block {
         this._drawEventIndicators(ctx);
         
         // Always draw block number and timing info
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = COLORS.WHITE;
         ctx.textAlign = 'center';
         
         if (this.width >= 60) {
@@ -192,7 +202,7 @@ export class Block {
             // Show event data info if block has events
             if (eventCount > 0) {
                 ctx.font = 'bold 8px Arial';
-                ctx.fillStyle = '#ffeb3b'; // Yellow for visibility
+                ctx.fillStyle = COLORS.YELLOW; // Yellow for visibility
                 ctx.fillText(`${eventCount} event${eventCount !== 1 ? 's' : ''}`, this.width/2, this.height/2 + 12);
             }
         } else if (this.width >= 30) {
@@ -236,9 +246,9 @@ export class Block {
             // Draw event indicator dot
             if (this.blockchain.name === 'Paima Engine') {
                 // darker green for paima engine
-                ctx.fillStyle = '#006400';
+                ctx.fillStyle = COLORS.PRIMARY;
             } else {
-                ctx.fillStyle = EventColors[event.type] || '#fff';
+                ctx.fillStyle = EventColors[event.type] || COLORS.WHITE;
             }
             ctx.beginPath();
             ctx.arc(eventX, eventY, dotSize / 2, 0, 2 * Math.PI);

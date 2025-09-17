@@ -1,4 +1,4 @@
-import { tableConfig, blockHeight, mergeColors, actionConfig } from '../config.js';
+import { blockHeight, actionConfig } from '../config.js';
 import { generateBlockchainEvent } from '../utils/helpers.js';
 import { ScheduledEvent } from './ScheduledEvent.js';
 import { Batcher } from './Batcher.js';
@@ -15,10 +15,20 @@ import { Table } from './Table.js';
 import { BlockProcessor } from './BlockProcessor.js';
 import { EventTypes } from './EventTypes.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
+import { PaimaEngineReader } from './PaimaEngineReader.js';
 import { ScheduledEvents } from './ScheduledEvents.js';
 import { Chain } from './Chain.js';
 import { ChainManager } from './ChainManager.js';
 import { TableManager } from './TableManager.js';
+
+function checkIntersection(rect1, rect2) {
+    return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+    );
+}
 
 /**
  * @class BlockchainEngine
@@ -50,6 +60,7 @@ export class BlockchainEngine {
         this.blockProcessorToBatcherChance = 0.005;
 
         this.blockProcessor = new BlockProcessor(this.canvasWidth * 0.805);
+        this.paimaEngineReader = new PaimaEngineReader(this.canvasWidth * 0.7, this.canvasHeight / 2);
         this.scheduledEvents = new ScheduledEvents(this.canvasWidth * 0.810, this.canvasHeight * 0.23);
         
         this.chainManager = new ChainManager(this);
@@ -350,6 +361,30 @@ export class BlockchainEngine {
                 block.update(deltaTime);
             });
         });
+
+        let shouldReaderBlink = false;
+        for (const blockchain of this.blockchains) {
+            for (const block of blockchain.blocks) {
+                const hasEvents = block.events.length > 0 || block.accumulatedEvents.length > 0;
+                if (hasEvents) {
+                    const readerBounds = this.paimaEngineReader.getBounds();
+                    const blockBounds = block.getBounds();
+                    if (checkIntersection(blockBounds, readerBounds)) {
+                        shouldReaderBlink = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldReaderBlink) {
+                break;
+            }
+        }
+
+        if (shouldReaderBlink) {
+            this.paimaEngineReader.startBlinking();
+        } else {
+            this.paimaEngineReader.stopBlinking();
+        }
         
         // Position actions based on their scheduled time (only if not traveling or waiting)
         this.scheduledEvents.actions.forEach(action => {

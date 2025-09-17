@@ -1,3 +1,5 @@
+import * as COLORS from '../colors.js';
+
 /**
  * @class BlockProcessor
  * @description Represents the block processor in the animation, which processes events from merged blocks.
@@ -39,14 +41,14 @@ export class BlockProcessor {
         ctx.save();
 
         // Draw the main box
-        ctx.fillStyle = 'rgba(25, 177, 123, 0.1)';
-        ctx.strokeStyle = '#19b17b';
+        ctx.fillStyle = COLORS.BACKGROUND_LIGHT_GREEN;
+        ctx.strokeStyle = COLORS.PRIMARY;
         ctx.lineWidth = 1;
         ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
         ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
         // Draw title
-        ctx.fillStyle = '#19b17b';
+        ctx.fillStyle = COLORS.PRIMARY;
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Block Processor', nowPosition, boxY + 20);
@@ -62,27 +64,27 @@ export class BlockProcessor {
         const { isAnimating, highlightedStateKey, highlightedArrowKey } = this;
 
         // Draw states (circles)
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = COLORS.WHITE;
         ctx.font = '10px Arial';
         Object.entries(states).forEach(([key, state]) => {
             ctx.beginPath();
             ctx.arc(state.x, state.y, 15, 0, 2 * Math.PI);
-            ctx.fillStyle = '#2a2a2a';
+            ctx.fillStyle = COLORS.DARK_GREY;
             ctx.fill();
 
             if (isAnimating && key === highlightedStateKey) {
-                ctx.strokeStyle = '#3498db';
+                ctx.strokeStyle = COLORS.BLUE;
                 ctx.lineWidth = 2;
             } else {
-                ctx.strokeStyle = '#19b17b';
+                ctx.strokeStyle = COLORS.PRIMARY;
                 ctx.lineWidth = 1;
             }
             ctx.stroke();
 
             if (isAnimating && key === highlightedStateKey) {
-                ctx.fillStyle = '#3498db';
+                ctx.fillStyle = COLORS.BLUE;
             } else {
-                ctx.fillStyle = '#fff';
+                ctx.fillStyle = COLORS.WHITE;
             }
             ctx.fillText(state.label, state.x, state.y);
         });
@@ -115,10 +117,10 @@ export class BlockProcessor {
         ctx.lineTo(endX - headlen * Math.cos(angle + Math.PI / 6), endY - headlen * Math.sin(angle + Math.PI / 6));
 
         if (isHighlighted) {
-            ctx.strokeStyle = '#3498db';
+            ctx.strokeStyle = COLORS.BLUE;
             ctx.lineWidth = 2;
         } else {
-            ctx.strokeStyle = '#19b17b';
+            ctx.strokeStyle = COLORS.PRIMARY;
             ctx.lineWidth = 1;
         }
         ctx.stroke();

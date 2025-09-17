@@ -1,5 +1,7 @@
 import { actionConfig } from '../config.js';
 
+import { SCHEDULED_EVENT_COLORS } from '../colors.js';
+
 /**
  * @class ScheduledEvent
  * @description Represents a scheduled event in the animation, which is triggered at a specific time.
@@ -18,7 +20,7 @@ export class ScheduledEvent {
         this.index = index;
         this.width = actionConfig.width;
         this.height = actionConfig.height;
-        this.color = actionConfig.color;
+        this.color = SCHEDULED_EVENT_COLORS.MAIN;
         this.opacity = 1.0;
         this.isActive = true;
         this.isExecuted = false;
@@ -129,7 +131,7 @@ export class ScheduledEvent {
             const centerY = this.y + this.height / 2;
             
             ctx.fillStyle = this.color;
-            ctx.strokeStyle = '#ccc';
+            ctx.strokeStyle = SCHEDULED_EVENT_COLORS.BORDER;
             ctx.lineWidth = 1;
             
             // Smooth shape transition based on progress
@@ -165,12 +167,12 @@ export class ScheduledEvent {
             ctx.fillRect(this.x, this.y, this.width, this.height);
             
             // Draw action border
-            ctx.strokeStyle = '#ccc';
+            ctx.strokeStyle = SCHEDULED_EVENT_COLORS.BORDER;
             ctx.lineWidth = 1;
             ctx.strokeRect(this.x, this.y, this.width, this.height);
             
             // Draw action number
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = SCHEDULED_EVENT_COLORS.TEXT;
             ctx.font = 'bold 10px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(this.index.toString(), this.x + this.width/2, this.y + this.height/2 + 3);
@@ -185,12 +187,12 @@ export class ScheduledEvent {
             ctx.fillRect(this.x, this.y, this.width, this.height);
             
             // Draw action border
-            ctx.strokeStyle = '#ccc';
+            ctx.strokeStyle = SCHEDULED_EVENT_COLORS.BORDER;
             ctx.lineWidth = 1;
             ctx.strokeRect(this.x, this.y, this.width, this.height);
             
             // Draw action number
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = SCHEDULED_EVENT_COLORS.TEXT;
             ctx.font = 'bold 10px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(this.index.toString(), this.x + this.width/2, this.y + this.height/2 + 3);

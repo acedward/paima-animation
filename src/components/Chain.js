@@ -1,5 +1,6 @@
 import { blockHeight } from '../config.js';
 import { Block } from './Block.js';
+import * as COLORS from '../colors.js';
 
 /**
  * @class Chain
@@ -15,7 +16,7 @@ export class Chain {
         this.yPosition = yPosition;
         this.timing = timing;
         this.lastBlockEndTime = lastBlockEndTime;
-        this.color = () => '#7f8c8d';
+        this.color = () => COLORS.GREY;
         this.counter = 0;
         this.blocks = [];
         this.lastBlockTime = 0;
@@ -56,11 +57,15 @@ export class Chain {
     }
 
     drawLabel(ctx) {
-        const color = this.name === 'Paima Engine' ? '#19b17b' : '#fff';
+        const color = this.name === 'Paima Engine' ? COLORS.PRIMARY : COLORS.WHITE;
         ctx.fillStyle = color;
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(this.name, 20, this.yPosition - 10);
+        if (this.name === 'Paima Engine') {
+            ctx.fillText('Paima L2', 20, this.yPosition - 10);
+        } else {
+            ctx.fillText(this.name, 20, this.yPosition - 10);
+        }
     }
 
     getTimingLabel() {

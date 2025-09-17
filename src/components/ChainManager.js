@@ -14,7 +14,8 @@ export class ChainManager {
         this.engine = engine;
         this.blockchains = [];
         this.chainSpacing = 80;
-        this.chainStartY = 400;
+        // This is again offset by the PaimaEngineChain's yPosition 
+        this.chainStartY = 440;
 
         // Start with only Paima Engine
         const paimaChain = new PaimaEngineChain(this.chainStartY, 0);

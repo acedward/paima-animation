@@ -1,3 +1,5 @@
+import * as COLORS from '../colors.js';
+
 /**
  * @class EventLegend
  * @description Manages and displays a legend for the different event types in the animation.
@@ -13,10 +15,7 @@ export class EventLegend {
         this.y = y;
         this.events = [];
         this.eventColorMap = {};
-        this.colorPalette = [
-            '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f',
-            '#e67e22', '#e74c3c', '#ecf0f1', '#7f8c8d'
-        ];
+        this.colorPalette = COLORS.MERGE_COLORS;
         this.nextColorIndex = 0;
     }
 
@@ -29,7 +28,7 @@ export class EventLegend {
     }
 
     getColorForEvent(eventName) {
-        return this.eventColorMap[eventName] || '#ffffff';
+        return this.eventColorMap[eventName] || COLORS.WHITE;
     }
 
     draw(ctx, eventParticles) {
@@ -45,16 +44,16 @@ export class EventLegend {
         const width = 130;
 
         // Draw legend background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillStyle = COLORS.BLACK;
         ctx.fillRect(legendX - 10, legendY - 15, width, this.events.length * itemHeight + 30);
         
         // Draw legend border
-        ctx.strokeStyle = '#333';
+        ctx.strokeStyle = COLORS.DARK_GREY;
         ctx.lineWidth = 1;
         ctx.strokeRect(legendX - 10, legendY - 15, width, this.events.length * itemHeight + 30);
 
         ctx.font = 'bold 10px Arial';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = COLORS.WHITE;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText('Event Types:', legendX, legendY);
@@ -65,7 +64,7 @@ export class EventLegend {
             ctx.fillStyle = event.color;
             ctx.fillRect(legendX, yPos - 5, 10, 10);
             
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = COLORS.WHITE;
             ctx.font = '9px Arial';
             ctx.fillText(event.name, legendX + 20, yPos);
         });

@@ -1,5 +1,5 @@
 import { Chain } from './Chain.js';
-import { mergeColors } from '../config.js';
+import * as COLORS from '../colors.js';
 
 /**
  * @class PaimaEngineChain
@@ -15,8 +15,9 @@ import { mergeColors } from '../config.js';
 export class PaimaEngineChain extends Chain {
     constructor(yPosition, lastBlockEndTime) {
         const timing = { type: 'fixed', interval: 1000 };
-        super('Paima Engine', yPosition, timing, lastBlockEndTime);
-        this.color = () => '#19b17b';
+        // This is offset is to make it draw inside the Paima Engine's block
+        super('Paima Engine', yPosition-40, timing, lastBlockEndTime);
+        this.color = () => COLORS.PRIMARY;
         this.id = 'paima-engine';
         this.currentMergeColorIndex = 0;
     }
@@ -33,7 +34,7 @@ export class PaimaEngineChain extends Chain {
                     createActionsFromBlock(secondaryBlock);
                     secondaryBlock.eventsProcessed = true;
 
-                    const newColor = mergeColors[this.currentMergeColorIndex % mergeColors.length];
+                    const newColor = COLORS.MERGE_COLORS[this.currentMergeColorIndex % COLORS.MERGE_COLORS.length];
                     secondaryBlock.startColorAnimation(newColor);
                     this.currentMergeColorIndex++;
                 }

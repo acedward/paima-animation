@@ -1,4 +1,5 @@
 import { tableConfig } from '../config.js';
+import * as COLORS from '../colors.js';
 
 /**
  * @class Table
@@ -60,33 +61,33 @@ export class Table {
             const blinkOpacity = 0.15 + 0.1 * Math.abs(Math.sin(blinkProgress * Math.PI * 3)); // Reduced intensity and frequency
             ctx.fillStyle = `rgba(25, 177, 123, ${blinkOpacity})`;
         } else {
-            ctx.fillStyle = '#1a1a1a';
+            ctx.fillStyle = COLORS.LIGHTEST_GREY;
         }
         ctx.fillRect(this.x, this.y, config.width, config.height);
         
         // Draw table border (slightly brighter when blinking)
         if (this.isBlinking) {
-            ctx.strokeStyle = '#1fb57d'; // Subtle green instead of bright
+            ctx.strokeStyle = COLORS.PRIMARY; // Subtle green instead of bright
             ctx.lineWidth = 2.5;
         } else {
-            ctx.strokeStyle = '#19b17b';
+            ctx.strokeStyle = COLORS.PRIMARY_ALT;
             ctx.lineWidth = 2;
         }
         ctx.strokeRect(this.x, this.y, config.width, config.height);
         
         // Draw table header
-        ctx.fillStyle = '#19b17b';
+        ctx.fillStyle = COLORS.PRIMARY;
         ctx.fillRect(this.x, this.y, config.width, config.headerHeight);
         
         // Draw table title
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = COLORS.WHITE;
         ctx.font = 'bold 12px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(this.name, this.x + config.width / 2, this.y + config.headerHeight / 2 + 4);
         
         // Draw column headers
         const columnWidth = config.width / this.columns.length;
-        ctx.fillStyle = '#ccc';
+        ctx.fillStyle = COLORS.LIGHTER_GREY;
         ctx.font = '10px Arial';
         
         this.columns.forEach((column, index) => {
@@ -96,7 +97,7 @@ export class Table {
         });
         
         // Draw separator line after headers
-        ctx.strokeStyle = '#333';
+        ctx.strokeStyle = COLORS.DARK_GREY_2;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(this.x, this.y + config.headerHeight + 20);
@@ -110,18 +111,19 @@ export class Table {
             
             // Alternate row background - inset by 1px to stay inside border
             if (rowIndex % 2 === 1) {
-                ctx.fillStyle = '#2a2a2a';
+                ctx.fillStyle = COLORS.DARK_GREY;
                 ctx.fillRect(this.x + 1, rowY - 10, config.width - 2, config.rowHeight);
             }
             
             // Highlight newest row (index 0) with subtle glow - inset by 1px to stay inside border
             if (rowIndex === 0) {
                 ctx.fillStyle = 'rgba(25, 177, 123, 0.08)'; // More subtle
+                // ctx.fillStyle = COLORS.BACKGROUND_LIGHT_GREEN; // More subtle
                 ctx.fillRect(this.x + 1, rowY - 10, config.width - 2, config.rowHeight);
             }
             
             // Draw row data
-            ctx.fillStyle = rowIndex === 0 ? '#1fb57d' : '#fff'; // Subtle green for newest
+            ctx.fillStyle = rowIndex === 0 ? COLORS.PRIMARY : COLORS.WHITE; // Subtle green for newest
             ctx.font = '9px Arial';
             row.forEach((cell, cellIndex) => {
                 const cellX = this.x + cellIndex * columnWidth;
@@ -131,7 +133,7 @@ export class Table {
         });
         
         // Draw column separator lines
-        ctx.strokeStyle = '#333';
+        ctx.strokeStyle = COLORS.DARK_GREY_2;
         ctx.lineWidth = 1;
         for (let i = 1; i < this.columns.length; i++) {
             const lineX = this.x + i * columnWidth;
@@ -154,7 +156,7 @@ export class Table {
             title: `SQL Table: ${this.name}`,
             content: `Rows: ${this.data.length}<br>
                      Columns: ${this.columns.join(', ')}<br>
-                     ${this.isBlinking ? '<span style="color: #19b17b;">UPDATING</span>' : 'Idle'}`,
+                     ${this.isBlinking ? `<span style="color: ${COLORS.PRIMARY};">UPDATING</span>` : 'Idle'}`,
             data: `Last update: ${lastUpdate ? lastUpdate.toLocaleTimeString() : 'Never'}<br>
                    Latest data: ${this.data.length > 0 ? this.data[0].row.join(' | ') : 'None'}`
         };

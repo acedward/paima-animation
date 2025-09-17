@@ -66,7 +66,7 @@ export class UserDevices {
     getTooltipData() {
         return {
             title: 'User Devices',
-            content: 'Simulates a collection of user devices sending requests to the batcher.',
+            content: 'Simulates a collection of user devices sending requests to a blockchain or the batcher.',
             data: `Device Count: ${this.devices.length}`
         };
     }

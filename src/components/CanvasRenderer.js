@@ -1,11 +1,12 @@
 import { BlockchainEngine } from './BlockchainEngine.js';
-import { tableConfig } from '../config.js';
+import { tableConfig, blockHeight } from '../config.js';
 import { Block } from './Block.js';
 import { randomMultipliers } from '../random.js';
 import { EventLegend } from './EventLegend.js';
 import { Chain } from './Chain.js';
 import { PaimaEngineChain } from './PaimaEngineChain.js';
 import { NowLine } from './NowLine.js';
+import * as COLORS from '../colors.js';
 
 /**
  * @class CanvasRenderer
@@ -40,6 +41,40 @@ export class CanvasRenderer {
         
         // Schedule automatic chain additions
         this.engine.scheduleChainAdditions();
+    }
+    
+    drawStyledRect(x, y, width, height, radius) {
+        this.ctx.save();
+
+        // Shadow
+        this.ctx.shadowColor = COLORS.BLACK;
+        this.ctx.shadowBlur = 10;
+        this.ctx.shadowOffsetX = 5;
+        this.ctx.shadowOffsetY = 5;
+
+        // Path
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + radius, y);
+        this.ctx.lineTo(x + width - radius, y);
+        this.ctx.arcTo(x + width, y, x + width, y + radius, radius);
+        this.ctx.lineTo(x + width, y + height - radius);
+        this.ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+        this.ctx.lineTo(x + radius, y + height);
+        this.ctx.arcTo(x, y + height, x, y + height - radius, radius);
+        this.ctx.lineTo(x, y + radius);
+        this.ctx.arcTo(x, y, x + radius, y, radius);
+        this.ctx.closePath();
+
+        // Fill
+        this.ctx.fillStyle = COLORS.BACKGROUND_GREEN;
+        this.ctx.fill();
+
+        // Border
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = COLORS.PRIMARY;
+        this.ctx.stroke();
+
+        this.ctx.restore();
     }
     
     addChainProgrammatically(name, blockTimeSeconds) {
@@ -275,6 +310,11 @@ export class CanvasRenderer {
             return bp.getTooltipData();
         }
 
+        const paimaReader = this.engine.paimaEngineReader;
+        if (paimaReader && paimaReader.isInside(x, y)) {
+            return paimaReader.getTooltipData();
+        }
+
         const se = this.engine.scheduledEvents;
         if (se && se.isInside(x, y)) {
             return se.getTooltipData();
@@ -441,7 +481,7 @@ export class CanvasRenderer {
                 </div>
                 ${chain.id !== 'paima-engine' ? 
                     `<button class="remove-btn" data-chain-id="${chain.id}">Remove</button>` : 
-                    '<div style="color: #19b17b; font-size: 12px; font-weight: bold;">ALWAYS ON</div>'
+                    `<div style="color: ${COLORS.PRIMARY}; font-size: 12px; font-weight: bold;">ALWAYS ON</div>`
                 }
             `;
             
@@ -462,6 +502,17 @@ export class CanvasRenderer {
     render() {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Draw divided background
+        const splitY = 470;
+        const gap = 20;
+        const borderRadius = 10;
+
+        // Top area
+        this.drawStyledRect(0, 0, this.canvas.width-10, splitY - gap / 2, borderRadius);
+
+        // Bottom area
+        this.drawStyledRect(0, splitY + gap / 2, this.canvas.width-10, this.canvas.height - (splitY + gap / 2), borderRadius);
         
         // Update engine logic only if not paused
         if (!this.isPaused) {
@@ -469,15 +520,15 @@ export class CanvasRenderer {
         }
         
         // Draw title
-        this.ctx.fillStyle = '#fff';
+        this.ctx.fillStyle = COLORS.WHITE;
         this.ctx.font = 'bold 24px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.shadowBlur = 0; // Clear any shadow effects
-        this.ctx.fillText('Cross-Blockchain Merging and Interoperability with Paima Engine', this.canvas.width/2, 40);
+        this.ctx.fillText('Paima Engine Core', this.canvas.width/2, 35);
         
         // Draw pause indicator
         if (this.isPaused) {
-            this.ctx.fillStyle = '#e74c3c';
+            this.ctx.fillStyle = COLORS.RED;
             this.ctx.font = 'bold 18px Arial';
             this.ctx.fillText('⏸️ PAUSED', 80, 20);
         }
@@ -489,6 +540,10 @@ export class CanvasRenderer {
         
         // Draw Block Processor
         this.engine.blockProcessor.draw(this.ctx);
+
+        if (this.engine.paimaEngineReader) {
+            this.engine.paimaEngineReader.draw(this.ctx);
+        }
 
         if (this.engine.scheduledEvents) {
             this.engine.scheduledEvents.draw(this.ctx);
@@ -553,10 +608,10 @@ export class CanvasRenderer {
 
         // Draw current status
         this.ctx.font = '16px Arial';
-        this.ctx.fillStyle = '#aaa';
+        this.ctx.fillStyle = COLORS.LIGHT_GREY;
         this.ctx.textAlign = 'center';
         const status = this.engine.getStatus();
-        this.ctx.fillText(status, this.canvas.width/2, this.canvas.height - 5);
+        this.ctx.fillText(status, this.canvas.width/2, this.canvas.height - 10);
         
         // Continue animation
         this.animationId = requestAnimationFrame(() => this.render());
